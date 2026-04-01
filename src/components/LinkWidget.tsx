@@ -1,0 +1,102 @@
+import type { ReactNode } from 'react';
+
+interface LinkWidgetProps {
+  caption: string;
+  /** Omitido en `variant="profile"` (no hay enlace). */
+  href?: string;
+  icon?: ReactNode;
+  className?: string;
+  'aria-label'?: string;
+  variant?: 'default' | 'profile';
+  /** Foto del avatar circular (variante profile). */
+  profileImage?: string;
+  firstName?: string;
+  lastName?: string;
+  /** Subtítulo bajo el nombre (variante profile). */
+  profileSubtitle?: string;
+}
+
+export default function LinkWidget({
+  caption,
+  href,
+  icon,
+  className = '',
+  'aria-label': ariaLabel,
+  variant = 'default',
+  profileImage = '/foto-joana.png',
+  firstName = 'Joana',
+  lastName = 'Castelló',
+  profileSubtitle = 'Ingeniera · Creadora · DJ',
+}: LinkWidgetProps) {
+  const profileShellClass = `flex h-full min-h-0 min-w-0 flex-col justify-start gap-2 px-[5px] ${className}`;
+  const linkShellClass = `group flex h-full min-h-0 min-w-0 w-full flex-col justify-start gap-2 px-[5px] ${className}`;
+
+  const body =
+    variant === 'profile' ? (
+      <div className="flex h-full min-h-0 w-full min-w-0 flex-1 items-center justify-start gap-[30px] rounded-[22px] bg-[#3e3b36] py-5 pl-5 pr-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+        <div className="size-[85px] shrink-0 overflow-hidden rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.12)]">
+          <img
+            src={profileImage}
+            alt=""
+            width={160}
+            height={160}
+            decoding="async"
+            draggable={false}
+            className="h-full w-full object-cover"
+          />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-[6px] text-left">
+          <p className="font-sans text-[16px] font-semibold leading-[1.2] tracking-tight text-white">
+            {firstName} {lastName}
+          </p>
+          <p className="font-sans text-[11px] font-medium leading-snug text-white/50">
+            {profileSubtitle}
+          </p>
+          <div className="mt-[2px] flex min-w-0 flex-wrap items-center gap-2">
+            <span className="inline-flex rounded-full bg-[#5a3e35] px-[10px] py-[5px] font-sans text-[10px] font-semibold leading-none text-[#ff7c4d]">
+              Vibe Coding
+            </span>
+            <span className="inline-flex rounded-full bg-[#4d4a45] px-[10px] py-[5px] font-sans text-[10px] font-semibold leading-none text-white/85">
+              IA
+            </span>
+          </div>
+        </div>
+      </div>
+    ) : (
+      <div className="relative aspect-square w-full min-w-0 shrink-0 overflow-hidden rounded-[26px] shadow-[0_14px_30px_rgba(0,0,0,0.12)] transition-transform duration-200 group-active:scale-[0.98]">
+        {icon}
+      </div>
+    );
+
+  const footer = (
+    <span className="shrink-0 text-center text-[12px] font-medium leading-none text-neutral-800">
+      {caption}
+    </span>
+  );
+
+  if (variant === 'profile') {
+    return (
+      <div
+        className={profileShellClass}
+        role="group"
+        aria-label={`${firstName} ${lastName}`}
+      >
+        {body}
+        {footer}
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={ariaLabel}
+      className={linkShellClass}
+    >
+      {body}
+      {footer}
+    </a>
+  );
+}
