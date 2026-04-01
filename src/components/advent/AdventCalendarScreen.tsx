@@ -1,5 +1,5 @@
-import { ChevronLeft } from 'lucide-react';
 import { ADVENT_ROWS, type AdventDay } from '../../data/adventDays';
+import ScreenBackButton from '../ScreenBackButton';
 
 const BG = '#1D3F25';
 const CARD = '#FEF8E8';
@@ -58,14 +58,7 @@ export default function AdventCalendarScreen({ onBack }: AdventCalendarScreenPro
     >
       <header className="shrink-0 px-3 pb-2 pt-3 md:pt-14">
         <div className="relative">
-          <button
-            type="button"
-            onClick={onBack}
-            className="absolute left-0 top-1 z-10 flex h-9 w-9 items-center justify-center rounded-full text-[#FEF8E8] transition-colors hover:bg-white/10"
-            aria-label="Volver al inicio"
-          >
-            <ChevronLeft className="h-6 w-6" strokeWidth={2} />
-          </button>
+          <ScreenBackButton onBack={onBack} />
           <div className="mx-auto flex flex-col items-center px-10 pt-8">
             <img
               src="/adviento/logo-adviento.png"

@@ -25,8 +25,6 @@ const HOME_LINKS: Record<AppSlotId, string> = {
   edits: 'https://wa.me/34694206233',
 };
 
-const VIBE_HREF = 'https://example.com/vibe-coding';
-
 function appIconFor(id: AppSlotId): ReactNode {
   switch (id) {
     case 'newsletter':
@@ -98,9 +96,10 @@ function AppDragPreview({ appId }: { appId: AppSlotId }) {
 
 interface HomeScreenGridProps {
   onOpenAdvent?: () => void;
+  onOpenVibe?: () => void;
 }
 
-export default function HomeScreenGrid({ onOpenAdvent }: HomeScreenGridProps) {
+export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenGridProps) {
   const [positions, setPositions] = useState<Record<AppSlotId, CellPos>>(getInitialPositions);
   const [draggingId, setDraggingId] = useState<AppSlotId | null>(null);
   const [previewCell, setPreviewCell] = useState<CellPos | null>(null);
@@ -324,13 +323,13 @@ export default function HomeScreenGrid({ onOpenAdvent }: HomeScreenGridProps) {
   return (
     <>
       <div
-        className="grid h-full min-h-0 grid-cols-4 gap-[15px]"
+        className="grid h-full min-h-0 grid-cols-4 gap-2.5 max-md:gap-2 md:gap-[15px]"
         style={{ gridTemplateRows: 'repeat(6, minmax(0, 1fr))' }}
       >
         <LinkWidget
           variant="profile"
-          caption="Ingeniera + Creativa"
-          className="col-span-4 row-span-2 h-full min-h-0"
+          caption="Sobre Mi"
+          className="col-span-4 row-span-2 h-full min-h-0 max-md:max-h-[80%] max-md:self-start"
           profileImage="/foto-joana.png"
           firstName="Joana"
           lastName="Castelló"
@@ -338,7 +337,7 @@ export default function HomeScreenGrid({ onOpenAdvent }: HomeScreenGridProps) {
 
         <LinkWidget
           caption="Aprende Vibe Coding"
-          href={VIBE_HREF}
+          onInternalNavigate={onOpenVibe}
           aria-label="Aprende Vibe Coding"
           className="col-start-3 row-start-3 col-span-2 row-span-2 h-full min-h-0"
           icon={
@@ -362,7 +361,7 @@ export default function HomeScreenGrid({ onOpenAdvent }: HomeScreenGridProps) {
               ref={(el) => registerSlot(pos, el)}
               data-grid-row={pos.row}
               data-grid-col={pos.col}
-              className="relative flex h-full min-h-0 min-w-0 items-center justify-center"
+              className="relative flex h-full min-h-0 min-w-0 items-center justify-center md:items-end"
               style={{
                 gridRowStart: pos.row + 1,
                 gridColumnStart: pos.col + 1,

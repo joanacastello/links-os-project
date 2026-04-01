@@ -4,6 +4,8 @@ interface LinkWidgetProps {
   caption: string;
   /** Omitido en `variant="profile"` (no hay enlace). */
   href?: string;
+  /** Abre una vista interna (sin `target="_blank"`). Requiere `aria-label` si no hay texto visible único. */
+  onInternalNavigate?: () => void;
   icon?: ReactNode;
   className?: string;
   'aria-label'?: string;
@@ -19,6 +21,7 @@ interface LinkWidgetProps {
 export default function LinkWidget({
   caption,
   href,
+  onInternalNavigate,
   icon,
   className = '',
   'aria-label': ariaLabel,
@@ -29,34 +32,34 @@ export default function LinkWidget({
   profileSubtitle = 'Ingeniera · Creadora · DJ',
 }: LinkWidgetProps) {
   const profileShellClass = `flex h-full min-h-0 min-w-0 flex-col justify-start gap-2 px-[5px] ${className}`;
-  const linkShellClass = `group flex h-full min-h-0 min-w-0 w-full flex-col justify-start gap-2 px-[5px] ${className}`;
+  const linkShellClass = `group flex h-full min-h-0 min-w-0 w-full flex-col justify-start gap-2 px-[5px] md:justify-end ${className}`;
 
   const body =
     variant === 'profile' ? (
-      <div className="flex h-full min-h-0 w-full min-w-0 flex-1 items-center justify-start gap-[30px] rounded-[22px] bg-[#3e3b36] py-5 pl-5 pr-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-        <div className="size-[85px] shrink-0 overflow-hidden rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.12)]">
+      <div className="flex h-full min-h-0 w-full min-w-0 flex-1 items-center justify-start gap-7 rounded-[22px] bg-[#3e3b36] py-5 pl-5 pr-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+        <div className="size-[76px] shrink-0 overflow-hidden rounded-full shadow-[0_1px_2px_rgba(0,0,0,0.12)]">
           <img
             src={profileImage}
             alt=""
-            width={160}
-            height={160}
+            width={152}
+            height={152}
             decoding="async"
             draggable={false}
             className="h-full w-full object-cover"
           />
         </div>
-        <div className="flex min-w-0 flex-1 flex-col gap-[6px] text-left">
-          <p className="font-sans text-[16px] font-semibold leading-[1.2] tracking-tight text-white">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5 text-left">
+          <p className="font-sans text-xxl font-semibold leading-tight tracking-tight text-white">
             {firstName} {lastName}
           </p>
-          <p className="font-sans text-[11px] font-medium leading-snug text-white/50">
+          <p className="font-sans text-sm font-medium leading-snug text-white/50">
             {profileSubtitle}
           </p>
-          <div className="mt-[2px] flex min-w-0 flex-wrap items-center gap-2">
-            <span className="inline-flex rounded-full bg-[#5a3e35] px-[10px] py-[5px] font-sans text-[10px] font-semibold leading-none text-[#ff7c4d]">
+          <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-2">
+            <span className="inline-flex rounded-full bg-[#5a3e35] px-3 py-1 font-sans text-sm font-semibold leading-none text-[#ff7c4d]">
               Vibe Coding
             </span>
-            <span className="inline-flex rounded-full bg-[#4d4a45] px-[10px] py-[5px] font-sans text-[10px] font-semibold leading-none text-white/85">
+            <span className="inline-flex rounded-full bg-[#4d4a45] px-3 py-1 font-sans text-sm font-semibold leading-none text-white/85">
               IA
             </span>
           </div>
@@ -69,7 +72,13 @@ export default function LinkWidget({
     );
 
   const footer = (
-    <span className="shrink-0 text-center text-[12px] font-medium leading-none text-neutral-800">
+    <span
+      className={
+        variant === 'profile'
+          ? 'max-md:-mb-6 shrink-0 text-center text-xs font-medium leading-none text-neutral-800'
+          : 'shrink-0 text-center text-[12px] font-medium leading-none text-neutral-800'
+      }
+    >
       {caption}
     </span>
   );
@@ -84,6 +93,20 @@ export default function LinkWidget({
         {body}
         {footer}
       </div>
+    );
+  }
+
+  if (onInternalNavigate) {
+    return (
+      <button
+        type="button"
+        onClick={onInternalNavigate}
+        aria-label={ariaLabel ?? caption}
+        className={`${linkShellClass} cursor-pointer border-0 bg-transparent p-0 text-inherit`}
+      >
+        {body}
+        {footer}
+      </button>
     );
   }
 
