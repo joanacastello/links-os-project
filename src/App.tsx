@@ -25,7 +25,7 @@ function App() {
         : undefined;
 
   return (
-    <main className="flex min-h-svh flex-col items-center justify-start overflow-y-auto overflow-x-hidden bg-[#B0ADA0] px-[clamp(0.375rem,2vw,1.5rem)] pt-[clamp(0.375rem,2vw,1.5rem)] pb-[clamp(0.75rem,2.5vw,2.25rem)]">
+    <main className="flex min-h-svh flex-col items-center justify-start overflow-x-hidden bg-[#B0ADA0] max-md:h-svh max-md:overflow-hidden max-md:px-0 max-md:pb-0 max-md:pt-0 md:overflow-y-auto md:px-[clamp(0.375rem,2vw,1.5rem)] md:pb-[clamp(0.75rem,2.5vw,2.25rem)] md:pt-[clamp(0.375rem,2vw,1.5rem)]">
       <PhoneFrame innerScreenClassName={innerScreenClassName} statusBarClassName={statusBarClassName}>
         {view === 'home' ? (
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_90%_at_50%_-15%,rgba(255,255,255,0.5),transparent_52%),radial-gradient(ellipse_100%_70%_at_50%_110%,rgba(55,50,45,0.06),transparent_45%)]" />

@@ -17,13 +17,45 @@ const LONG_PRESS_MS = 1000;
 const MOVE_CANCEL_PX = 14;
 
 const HOME_LINKS: Record<AppSlotId, string> = {
-  newsletter: 'https://example.com/newsletter',
+  newsletter: 'https://www.elbackstage.com/',
   terminal: 'https://terminal.joanacastello.com',
   advent: '#',
+  projects: '#',
   github: 'https://github.com/joanacastello',
   soundcloud: 'https://soundcloud.com/joanacastello/tracks',
   edits: 'https://wa.me/34694206233',
 };
+
+function ProjectsFolderMiniIcon() {
+  return (
+    <div className="h-full w-full rounded-[inherit] border border-black/10 bg-[hsla(var(--dock-bg))] p-[5px] shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] backdrop-blur-[20px]">
+      <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-[2px] rounded-[17px] bg-white/12 p-[4px]">
+        <div className="col-start-1 row-start-1 aspect-square overflow-hidden rounded-[6px]">
+          <img
+            src="/zero2hero/zero2hero-icon.png"
+            alt=""
+            width={96}
+            height={96}
+            decoding="async"
+            draggable={false}
+            className="size-full aspect-square object-contain object-center"
+          />
+        </div>
+        <div className="col-start-2 row-start-1 aspect-square overflow-hidden rounded-[6px]">
+          <img
+            src="/onanem/onanem-icon.png"
+            alt=""
+            width={96}
+            height={96}
+            decoding="async"
+            draggable={false}
+            className="size-full aspect-square object-contain object-center"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function appIconFor(id: AppSlotId): ReactNode {
   switch (id) {
@@ -39,6 +71,8 @@ function appIconFor(id: AppSlotId): ReactNode {
       return (
         <img src="/app-icons/adviento.png" alt="" width={74} height={74} draggable={false} />
       );
+    case 'projects':
+      return <ProjectsFolderMiniIcon />;
     case 'github':
       return <img src="/app-icons/github.png" alt="" width={74} height={74} draggable={false} />;
     case 'soundcloud':
@@ -62,6 +96,8 @@ function appMeta(id: AppSlotId): { label: string; bare?: boolean } {
       return { label: 'Terminal' };
     case 'advent':
       return { label: 'Adviento' };
+    case 'projects':
+      return { label: 'Proyectos' };
     case 'github':
       return { label: 'Github', bare: true };
     case 'soundcloud':
@@ -101,6 +137,7 @@ interface HomeScreenGridProps {
 
 export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenGridProps) {
   const [positions, setPositions] = useState<Record<AppSlotId, CellPos>>(getInitialPositions);
+  const [isProjectsFolderOpen, setIsProjectsFolderOpen] = useState(false);
   const [draggingId, setDraggingId] = useState<AppSlotId | null>(null);
   const [previewCell, setPreviewCell] = useState<CellPos | null>(null);
   const [previewAnchor, setPreviewAnchor] = useState<{ x: number; y: number } | null>(null);
@@ -114,11 +151,35 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
   const dragOriginRef = useRef<CellPos | null>(null);
   const skipClickRef = useRef(false);
   const slotElementsRef = useRef<Map<string, HTMLElement | null>>(new Map());
+  const projectsPanelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const saved = loadSavedPositions();
     if (saved) setPositions(saved);
   }, []);
+
+  useEffect(() => {
+    if (!isProjectsFolderOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsProjectsFolderOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isProjectsFolderOpen]);
+
+  useEffect(() => {
+    if (!isProjectsFolderOpen) return;
+    const onPointerDown = (e: PointerEvent) => {
+      const panel = projectsPanelRef.current;
+      if (!panel) return;
+      const target = e.target as Node | null;
+      if (target && !panel.contains(target)) {
+        setIsProjectsFolderOpen(false);
+      }
+    };
+    window.addEventListener('pointerdown', onPointerDown, true);
+    return () => window.removeEventListener('pointerdown', onPointerDown, true);
+  }, [isProjectsFolderOpen]);
 
   useLayoutEffect(() => {
     if (!draggingId || !previewCell) {
@@ -277,6 +338,7 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
         timer = setTimeout(() => {
           timer = null;
           cleanupWindow(onEarlyMove, onEarlyUp);
+          setIsProjectsFolderOpen(false);
           const origin = positionsRef.current[appId];
           dragOriginRef.current = origin;
           setPreviewCell(origin);
@@ -329,7 +391,7 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
         <LinkWidget
           variant="profile"
           caption="Sobre Mi"
-          className="col-span-4 row-span-2 h-full min-h-0 max-md:max-h-[80%] max-md:self-start"
+          className="col-span-4 row-span-2 h-full min-h-0 max-md:max-h-[90%] max-md:self-start md:max-h-[90%] md:self-end"
           profileImage="/foto-joana.png"
           firstName="Joana"
           lastName="Castelló"
@@ -384,10 +446,21 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
                     onClick: (e) => {
                       const wasSkipping = skipClickRef.current;
                       getHandlers(occupant).onClick(e);
+                      if (wasSkipping) return;
+
+                      if (occupant === 'projects') {
+                        e.preventDefault();
+                        setIsProjectsFolderOpen((prev) => !prev);
+                        return;
+                      }
+
+                      if (isProjectsFolderOpen) {
+                        setIsProjectsFolderOpen(false);
+                      }
+
                       if (
                         occupant === 'advent' &&
-                        onOpenAdvent &&
-                        !wasSkipping
+                        onOpenAdvent
                       ) {
                         e.preventDefault();
                         onOpenAdvent();
@@ -399,6 +472,70 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
             </div>
           );
         })}
+      </div>
+
+      <div
+        className={`absolute -bottom-[8.5rem] -left-4 -right-4 -top-4 z-[120] flex items-center justify-center backdrop-blur-[24px] transition-opacity duration-220 md:-top-14 max-md:fixed max-md:inset-[0.375rem] max-md:overflow-hidden max-md:rounded-[34px] ${
+          isProjectsFolderOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+        onClick={() => setIsProjectsFolderOpen(false)}
+      >
+        <div
+          className={`flex w-full max-w-[320px] flex-col items-center transition-transform duration-220 ${
+            isProjectsFolderOpen ? 'translate-y-0 scale-100' : 'translate-y-2 scale-95'
+          }`}
+          ref={projectsPanelRef}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p id="projects-folder-title" className="mb-5 w-full text-left text-[30px] font-bold text-white drop-shadow-sm">
+            Proyectos
+          </p>
+          <div
+            className="dock-glass h-[min(320px,calc(100vw-2rem))] w-[min(320px,calc(100vw-2rem))] rounded-[30px] border border-white/40 shadow-[0_18px_42px_rgba(0,0,0,0.28)] backdrop-blur-[24px]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="projects-folder-title"
+          >
+            <div className="grid h-full w-full place-items-center px-4 pb-3 pt-1">
+              <div className="grid h-[292px] w-[256px] grid-cols-3 grid-rows-3 place-items-center gap-x-3 gap-y-2">
+                <button
+                  type="button"
+                  className="flex h-[82px] w-[72px] flex-col items-center justify-start gap-1 rounded-xl p-1.5 transition-colors hover:bg-white/10"
+                >
+                  <div className="h-[56px] w-[56px] shrink-0 aspect-square overflow-hidden rounded-[13px] shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                    <img
+                      src="/zero2hero/zero2hero-icon.png"
+                      alt=""
+                      width={128}
+                      height={128}
+                      decoding="async"
+                      draggable={false}
+                      className="size-full aspect-square object-contain object-center"
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium leading-none text-white drop-shadow-sm">Zero2Hero</span>
+                </button>
+                <button
+                  type="button"
+                  className="flex h-[82px] w-[72px] flex-col items-center justify-start gap-1 rounded-xl p-1.5 transition-colors hover:bg-white/10"
+                >
+                  <div className="h-[56px] w-[56px] shrink-0 aspect-square overflow-hidden rounded-[13px] shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                    <img
+                      src="/onanem/onanem-icon.png"
+                      alt=""
+                      width={128}
+                      height={128}
+                      decoding="async"
+                      draggable={false}
+                      className="size-full aspect-square object-contain object-center"
+                    />
+                  </div>
+                  <span className="text-[10px] font-medium leading-none text-white drop-shadow-sm">On Anem</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {draggingId && previewAnchor ? (

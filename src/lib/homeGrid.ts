@@ -5,6 +5,7 @@ export type AppSlotId =
   | 'newsletter'
   | 'terminal'
   | 'advent'
+  | 'projects'
   | 'github'
   | 'soundcloud'
   | 'edits';
@@ -38,6 +39,7 @@ export function getInitialPositions(): Record<AppSlotId, CellPos> {
     newsletter: { row: 2, col: 0 },
     terminal: { row: 2, col: 1 },
     advent: { row: 3, col: 0 },
+    projects: { row: 3, col: 1 },
     github: { row: 4, col: 0 },
     soundcloud: { row: 4, col: 1 },
     edits: { row: 5, col: 0 },
@@ -140,7 +142,7 @@ export function tryMoveApp(
 
 export function positionsAreValid(positions: Record<AppSlotId, CellPos>): boolean {
   const ids = Object.keys(positions) as AppSlotId[];
-  if (ids.length !== 6) return false;
+  if (ids.length !== 7) return false;
   const seen = new Set<string>();
   for (const id of ids) {
     const p = positions[id];
