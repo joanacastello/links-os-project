@@ -2,13 +2,20 @@ export type NewsletterSubscribeOutcome =
   | { ok: true }
   | { ok: false; error: string };
 
+type NewsletterSubscribeRequest = {
+  email: string;
+  consent: boolean;
+  captchaToken?: string;
+  website?: string;
+};
+
 export async function requestNewsletterSubscribe(
-  email: string,
+  payload: NewsletterSubscribeRequest,
 ): Promise<NewsletterSubscribeOutcome> {
   const res = await fetch('/api/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify(payload),
   });
 
   let data: { error?: string } = {};
