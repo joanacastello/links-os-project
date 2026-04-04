@@ -13,12 +13,12 @@ jobs:
     name: 🔑 Secrets Detection
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Scan for secrets with Gitleaks
-        uses: gitleaks/gitleaks-action@b6c5bf809da38c0de1fec73b78dc76a9b9f5b671 # v2
+        uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -26,10 +26,10 @@ jobs:
     name: 📦 Dependency Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
 
@@ -40,7 +40,7 @@ jobs:
         run: npm audit --audit-level=high
 
       - name: Snyk dependency scan
-        uses: snyk/actions/node@b98d498629f1c5ec19800a42d48ef56f28ae75f5 # master
+        uses: snyk/actions/node@master
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -55,19 +55,19 @@ jobs:
       actions: read
       contents: read
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@v4
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@ce28f5bb42b492e0e988b8e5716e3d1b5b5eff41 # v3
+        uses: github/codeql-action/init@v3
         with:
           languages: javascript-typescript
           queries: security-and-quality
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@ce28f5bb42b492e0e988b8e5716e3d1b5b5eff41 # v3
+        uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@ce28f5bb42b492e0e988b8e5716e3d1b5b5eff41 # v3
+        uses: github/codeql-action/analyze@v3
         with:
           category: "/language:javascript-typescript"
 
@@ -75,10 +75,10 @@ jobs:
     name: 🧠 Semgrep SAST
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@v4
 
       - name: Run Semgrep
-        uses: returntocorp/semgrep-action@fcd5ab7459e8d91cb1777481980d1b18b4fc6735 # v1
+        uses: returntocorp/semgrep-action@v1
         with:
           config: >-
             p/javascript
