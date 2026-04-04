@@ -19,6 +19,16 @@ type Env = {
 
 type BeehiivFailure = Extract<SubscribeResult, { ok: false }>;
 
+export function isSubscribeFailure(r: SubscribeResult): r is BeehiivFailure {
+  return r.ok === false;
+}
+
+type ParsedResponseJson = { ok: true; json: unknown } | BeehiivFailure;
+
+function isParsedJsonFailure(p: ParsedResponseJson): p is BeehiivFailure {
+  return p.ok === false;
+}
+
 type BeehiivRuntimeConfig = {
   apiBase: string;
   apiKey: string;
@@ -50,7 +60,7 @@ function extractBeehiivError(body: unknown): string | undefined {
   return undefined;
 }
 
-function parseResponseJson(text: string): { ok: true; json: unknown } | BeehiivFailure {
+function parseResponseJson(text: string): ParsedResponseJson {
   try {
     return { ok: true, json: text ? JSON.parse(text) : {} };
   } catch {
@@ -125,7 +135,7 @@ async function createBeehiivSubscription(
   }
 
   const parsed = parseResponseJson(await createRes.text());
-  if (!parsed.ok) {
+  if (isParsedJsonFailure(parsed)) {
     return {
       ok: false,
       publicError: parsed.publicError,

@@ -1,4 +1,3 @@
-import { subscribeEmailToBeehiiv } from '../server/beehiivSubscribe.js';
 import { anonymize, logSecurityEvent } from '../server/security/logging.js';
 import {
   getRequestHost,
@@ -9,7 +8,11 @@ import {
   setCorsHeaders,
 } from '../server/security/http.js';
 import { applyRateLimit } from '../server/security/rateLimit.js';
-import { validateSubscribePayload } from '../server/security/subscribeValidation.js';
+import {
+  isValidationFailure,
+  validateSubscribePayload,
+} from '../server/security/subscribeValidation.js';
+import { isSubscribeFailure, subscribeEmailToBeehiiv } from '../server/beehiivSubscribe.js';
 
 type VercelReq = {
   method?: string;
@@ -68,7 +71,7 @@ export default async function handler(req: VercelReq, res: VercelRes): Promise<v
   }
 
   const validation = validateSubscribePayload(req.body);
-  if (!validation.ok) {
+  if (isValidationFailure(validation)) {
     logSecurityEvent('subscribe_validation_failed', {
       reason: validation.internalReason,
       ipHash: anonymize(clientIp),
@@ -78,7 +81,7 @@ export default async function handler(req: VercelReq, res: VercelRes): Promise<v
   }
 
   const result = await subscribeEmailToBeehiiv(validation.payload.email);
-  if (!result.ok) {
+  if (isSubscribeFailure(result)) {
     logSecurityEvent('subscribe_provider_error', {
       reason: result.internalReason,
       ipHash: anonymize(clientIp),

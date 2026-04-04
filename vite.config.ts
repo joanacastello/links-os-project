@@ -1,7 +1,7 @@
 import type { IncomingMessage } from 'node:http';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
-import { subscribeEmailToBeehiiv } from './server/beehiivSubscribe.ts';
+import { isSubscribeFailure, subscribeEmailToBeehiiv } from './server/beehiivSubscribe.ts';
 import { anonymize, logSecurityEvent } from './server/security/logging.ts';
 import {
   getRequestHost,
@@ -11,7 +11,10 @@ import {
   setCorsHeaders,
 } from './server/security/http.ts';
 import { applyRateLimit } from './server/security/rateLimit.ts';
-import { validateSubscribePayload } from './server/security/subscribeValidation.ts';
+import {
+  isValidationFailure,
+  validateSubscribePayload,
+} from './server/security/subscribeValidation.ts';
 
 const MAX_BODY_BYTES = 8 * 1024;
 
@@ -128,7 +131,7 @@ function subscribeApiPlugin(): Plugin {
         }
 
         const validation = validateSubscribePayload(parsed);
-        if (!validation.ok) {
+        if (isValidationFailure(validation)) {
           logSecurityEvent('subscribe_validation_failed_dev', {
             reason: validation.internalReason,
             ipHash: anonymize(clientIp),
@@ -140,7 +143,7 @@ function subscribeApiPlugin(): Plugin {
         }
 
         const result = await subscribeEmailToBeehiiv(validation.payload.email, env);
-        if (!result.ok) {
+        if (isSubscribeFailure(result)) {
           logSecurityEvent('subscribe_provider_error_dev', {
             reason: result.internalReason,
             ipHash: anonymize(clientIp),

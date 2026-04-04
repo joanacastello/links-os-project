@@ -40,7 +40,7 @@ type ValidationSuccess = {
   payload: SubscribePayload;
 };
 
-type ValidationFailure = {
+export type ValidationFailure = {
   ok: false;
   statusCode: number;
   publicError: string;
@@ -48,6 +48,10 @@ type ValidationFailure = {
 };
 
 export type ValidationResult = ValidationSuccess | ValidationFailure;
+
+export function isValidationFailure(r: ValidationResult): r is ValidationFailure {
+  return r.ok === false;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
