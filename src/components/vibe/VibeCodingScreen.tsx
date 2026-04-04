@@ -247,7 +247,7 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
                 >
                   política de cookies
                 </a>
-                .
+                {'.'}
               </span>
             </label>
             {TURNSTILE_SITE_KEY ? (

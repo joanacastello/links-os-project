@@ -49,7 +49,7 @@ function ActiveScreen({
   onOpenOnAnem,
   onBackHome,
   onProjectBack,
-}: ActiveScreenProps) {
+}: Readonly<ActiveScreenProps>) {
   switch (view) {
     case 'home':
       return (

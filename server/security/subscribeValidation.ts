@@ -6,13 +6,14 @@ const CAPTCHA_MAX_LENGTH = 2_048;
 /** Formato razonable para newsletter, sin regex (evita avisos ReDoS en análisis estático). */
 export function isValidSubscribeEmailFormat(email: string): boolean {
   if (email.length === 0 || email.length > EMAIL_MAX_LENGTH) return false;
-  for (let i = 0; i < email.length; i += 1) {
-    const code = email.charCodeAt(i);
-    if (code <= 32) return false;
+  for (let i = 0; i < email.length; ) {
+    const code = email.codePointAt(i);
+    if (code === undefined || code <= 32) return false;
+    i += code > 0xffff ? 2 : 1;
   }
   const at = email.indexOf('@');
   if (at <= 0) return false;
-  if (email.indexOf('@', at + 1) !== -1) return false;
+  if (email.includes('@', at + 1)) return false;
   const local = email.slice(0, at);
   const domain = email.slice(at + 1);
   if (

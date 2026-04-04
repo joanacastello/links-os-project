@@ -56,9 +56,22 @@ function subscribeApiPlugin(): Plugin {
           host,
           allowedOriginsRaw: env.ALLOWED_SUBSCRIBE_ORIGINS,
         });
-        if (originAllowed) {
-          setCorsHeaders((key, value) => res.setHeader(key, value), origin);
+        const setHeader = (key: string, value: string) => res.setHeader(key, value);
+
+        if (req.method === 'OPTIONS') {
+          if (!originAllowed) {
+            logSecurityEvent('subscribe_origin_blocked_dev', { origin, host });
+            res.statusCode = 403;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: 'Origen no permitido.' }));
+            return;
+          }
+          setCorsHeaders(setHeader, origin);
+          res.statusCode = 204;
+          res.end();
+          return;
         }
+
         if (!originAllowed) {
           logSecurityEvent('subscribe_origin_blocked_dev', { origin, host });
           res.statusCode = 403;
@@ -66,11 +79,8 @@ function subscribeApiPlugin(): Plugin {
           res.end(JSON.stringify({ error: 'Origen no permitido.' }));
           return;
         }
-        if (req.method === 'OPTIONS') {
-          res.statusCode = 204;
-          res.end();
-          return;
-        }
+
+        setCorsHeaders(setHeader, origin);
         if (req.method !== 'POST') {
           res.statusCode = 405;
           res.setHeader('Content-Type', 'application/json');
