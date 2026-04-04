@@ -46,9 +46,10 @@ export function getInitialPositions(): Record<AppSlotId, CellPos> {
     terminal: { row: 2, col: 1 },
     advent: { row: 3, col: 0 },
     projects: { row: 3, col: 1 },
-    edits: { row: 4, col: 0 },
-    github: { row: 4, col: 2 },
-    soundcloud: { row: 4, col: 3 },
+    /** Fila 4 del grid (0-based) vacía a propósito: separa bloque central y dock inferior. */
+    edits: { row: 5, col: 0 },
+    github: { row: 5, col: 2 },
+    soundcloud: { row: 5, col: 3 },
   };
 }
 
@@ -69,6 +70,19 @@ function isLegacyDefaultLayout(positions: Record<AppSlotId, CellPos>): boolean {
     isSamePos(positions.github, { row: 4, col: 0 }) &&
     isSamePos(positions.soundcloud, { row: 4, col: 1 }) &&
     isSamePos(positions.edits, { row: 5, col: 0 })
+  );
+}
+
+/** Default anterior: dock inferior en fila 4 (sin fila vacía); migra al default con fila 4 vacía. */
+function isSupersededDefaultBottomRow4(positions: Record<AppSlotId, CellPos>): boolean {
+  return (
+    isSamePos(positions.newsletter, { row: 2, col: 0 }) &&
+    isSamePos(positions.terminal, { row: 2, col: 1 }) &&
+    isSamePos(positions.advent, { row: 3, col: 0 }) &&
+    isSamePos(positions.projects, { row: 3, col: 1 }) &&
+    isSamePos(positions.edits, { row: 4, col: 0 }) &&
+    isSamePos(positions.github, { row: 4, col: 2 }) &&
+    isSamePos(positions.soundcloud, { row: 4, col: 3 })
   );
 }
 
@@ -190,6 +204,7 @@ function parseStoredPositions(raw: string): Record<AppSlotId, CellPos> | null {
   const parsed = JSON.parse(raw) as Record<AppSlotId, CellPos>;
   if (!positionsAreValid(parsed)) return null;
   if (isLegacyDefaultLayout(parsed)) return null;
+  if (isSupersededDefaultBottomRow4(parsed)) return null;
   return parsed;
 }
 

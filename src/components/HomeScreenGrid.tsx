@@ -204,15 +204,6 @@ export default function HomeScreenGrid({
 
   useEffect(() => {
     if (!isProjectsFolderOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsProjectsFolderOpen(false);
-    };
-    globalThis.addEventListener('keydown', onKeyDown);
-    return () => globalThis.removeEventListener('keydown', onKeyDown);
-  }, [isProjectsFolderOpen]);
-
-  useEffect(() => {
-    if (!isProjectsFolderOpen) return;
     const onPointerDown = (e: PointerEvent) => {
       const panel = projectsPanelRef.current;
       if (!panel) return;
@@ -534,11 +525,14 @@ export default function HomeScreenGrid({
 
       {isProjectsFolderOpen && projectsPortalRoot
         ? createPortal(
-            <div
-              role="dialog"
-              aria-modal="true"
+            <dialog
+              open
               aria-labelledby="projects-folder-title"
-              className="pointer-events-auto absolute inset-0 z-[120] flex items-center justify-center rounded-[34px] border-0 bg-black/25 p-0 backdrop-blur-[24px] transition-opacity duration-220 [-webkit-backdrop-filter:blur(24px)]"
+              onCancel={(e) => {
+                e.preventDefault();
+                setIsProjectsFolderOpen(false);
+              }}
+              className="pointer-events-auto absolute inset-0 z-[120] m-0 flex h-full max-h-none w-full max-w-none items-center justify-center rounded-[34px] border-0 bg-black/25 p-0 backdrop-blur-[24px] transition-opacity duration-220 [-webkit-backdrop-filter:blur(24px)]"
             >
               <div
                 className="flex w-full max-w-[320px] flex-col items-center px-2 transition-transform duration-220 translate-y-0 scale-100"
@@ -546,7 +540,7 @@ export default function HomeScreenGrid({
               >
                 <p
                   id="projects-folder-title"
-                  className="mb-5 w-full text-left text-[30px] font-bold text-neutral-800"
+                  className="mb-5 w-full text-left text-[30px] font-bold text-white/80"
                 >
                   Proyectos
                 </p>
@@ -599,7 +593,7 @@ export default function HomeScreenGrid({
                   </div>
                 </div>
               </div>
-            </div>,
+            </dialog>,
             projectsPortalRoot,
           )
         : null}

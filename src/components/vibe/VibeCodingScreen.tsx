@@ -250,7 +250,7 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
                 >
                   Política de Privacidad
                 </a>
-                .
+                {'.'}
               </span>
             </label>
             {TURNSTILE_SITE_KEY ? (
