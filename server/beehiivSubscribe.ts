@@ -126,7 +126,12 @@ async function createBeehiivSubscription(
 
   const parsed = parseResponseJson(await createRes.text());
   if (!parsed.ok) {
-    return { ...parsed, internalReason: 'Beehiiv create subscription returned invalid JSON' };
+    return {
+      ok: false,
+      publicError: parsed.publicError,
+      internalReason: 'Beehiiv create subscription returned invalid JSON',
+      statusCode: parsed.statusCode,
+    };
   }
 
   if (!createRes.ok) {

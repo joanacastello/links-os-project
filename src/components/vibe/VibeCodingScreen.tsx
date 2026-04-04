@@ -2,9 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import ScreenBackButton from '../ScreenBackButton';
 import { SA_COMMUNITY_EXTERNAL_URL } from '../../config/saCommunity';
-import { TURNSTILE_SITE_KEY } from '../../config/security';
 import { requestNewsletterSubscribe } from '../../lib/requestNewsletterSubscribe';
-import TurnstileWidget from './TurnstileWidget';
 
 const BG = '#05142b';
 /** Fondo del modal de confirmación (navy). */
@@ -144,7 +142,6 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
   const [email, setEmail] = useState('');
   const [consent, setConsent] = useState(false);
   const [website, setWebsite] = useState('');
-  const [captchaToken, setCaptchaToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
@@ -164,7 +161,6 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
     const result = await requestNewsletterSubscribe({
       email: trimmed,
       consent,
-      captchaToken: captchaToken || undefined,
       website,
     });
     setLoading(false);
@@ -172,9 +168,8 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
       setError(result.error);
       return;
     }
-    setCaptchaToken('');
     setSuccessOpen(true);
-  }, [captchaToken, consent, email, website]);
+  }, [consent, email, website]);
 
   const communityHref = SA_COMMUNITY_EXTERNAL_URL || undefined;
 
@@ -253,11 +248,6 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
                 {'.'}
               </span>
             </label>
-            {TURNSTILE_SITE_KEY ? (
-              <div className="mt-3">
-                <TurnstileWidget siteKey={TURNSTILE_SITE_KEY} onTokenChange={setCaptchaToken} />
-              </div>
-            ) : null}
             {error ? (
               <p className="mt-2 text-left text-sm text-red-300" role="alert">
                 {error}

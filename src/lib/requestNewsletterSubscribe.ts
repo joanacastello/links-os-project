@@ -5,7 +5,6 @@ export type NewsletterSubscribeOutcome =
 type NewsletterSubscribeRequest = {
   email: string;
   consent: boolean;
-  captchaToken?: string;
   website?: string;
 };
 

@@ -7,7 +7,6 @@ Responder de forma rápida ante abuso, caída de proveedor o posible fuga de cre
 - Pico de respuestas `429` en menos de 5 minutos.
 - Incremento de respuestas `5xx` del endpoint.
 - Errores repetidos `subscribe_provider_error` en logs estructurados.
-- Fallos continuos de Turnstile (`subscribe_turnstile_failed`).
 
 ## Respuesta operativa
 1. Confirmar alcance temporal y origen (IPs/ASN) a partir de logs.

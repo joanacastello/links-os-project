@@ -6,7 +6,6 @@ import LinksDock from './components/LinksDock';
 import OnAnemScreen from './components/projects/OnAnemScreen';
 import Zero2HeroScreen from './components/projects/Zero2HeroScreen';
 import VibeCodingScreen from './components/vibe/VibeCodingScreen';
-import SentryErrorTestButton from './components/dev/SentryErrorTestButton';
 
 type AppView = 'home' | 'advent' | 'vibe' | 'zero2hero' | 'onanem';
 
@@ -126,7 +125,6 @@ function App() {
         </div>
         {isHome ? <LinksDock /> : null}
       </PhoneFrame>
-      <SentryErrorTestButton />
     </main>
   );
 }

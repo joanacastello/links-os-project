@@ -12,7 +12,6 @@ import {
 } from './server/security/http.ts';
 import { applyRateLimit } from './server/security/rateLimit.ts';
 import { validateSubscribePayload } from './server/security/subscribeValidation.ts';
-import { verifyTurnstileToken } from './server/security/turnstile.ts';
 
 const MAX_BODY_BYTES = 8 * 1024;
 
@@ -50,12 +49,8 @@ function subscribeApiPlugin(): Plugin {
         const getHeader = (name: string) => req.headers[name.toLowerCase()];
         const origin = getRequestOrigin(getHeader);
         const host = getRequestHost(getHeader);
-        const env = loadEnv(mode, root, ['BEEHIIV_', 'TURNSTILE_', 'ALLOWED_SUBSCRIBE_ORIGINS']);
-        const originAllowed = isOriginAllowed({
-          origin,
-          host,
-          allowedOriginsRaw: env.ALLOWED_SUBSCRIBE_ORIGINS,
-        });
+        const env = loadEnv(mode, root, ['BEEHIIV_']);
+        const originAllowed = isOriginAllowed({ origin, host });
         const setHeader = (key: string, value: string) => res.setHeader(key, value);
 
         if (req.method === 'OPTIONS') {
@@ -141,22 +136,6 @@ function subscribeApiPlugin(): Plugin {
           res.statusCode = validation.statusCode;
           res.setHeader('Content-Type', 'application/json');
           res.end(JSON.stringify({ error: validation.publicError }));
-          return;
-        }
-
-        const turnstile = await verifyTurnstileToken({
-          token: validation.payload.captchaToken,
-          remoteIp: clientIp,
-          env,
-        });
-        if (!turnstile.ok) {
-          logSecurityEvent('subscribe_turnstile_failed_dev', {
-            reason: turnstile.internalReason,
-            ipHash: anonymize(clientIp),
-          });
-          res.statusCode = turnstile.statusCode;
-          res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ error: turnstile.publicError }));
           return;
         }
 

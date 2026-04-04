@@ -1,7 +1,6 @@
 const EMAIL_MAX_LENGTH = 254;
 const EMAIL_LOCAL_MAX_LENGTH = 64;
 const EMAIL_DOMAIN_MAX_LENGTH = 253;
-const CAPTCHA_MAX_LENGTH = 2_048;
 
 /** Formato razonable para newsletter, sin regex (evita avisos ReDoS en análisis estático). */
 export function isValidSubscribeEmailFormat(email: string): boolean {
@@ -33,7 +32,6 @@ export function isValidSubscribeEmailFormat(email: string): boolean {
 export type SubscribePayload = {
   email: string;
   consent: true;
-  captchaToken?: string;
   website?: string;
 };
 
@@ -69,7 +67,7 @@ export function validateSubscribePayload(raw: unknown): ValidationResult {
     };
   }
 
-  const allowedKeys = new Set(['email', 'consent', 'captchaToken', 'website']);
+  const allowedKeys = new Set(['email', 'consent', 'website']);
   const unknownKeys = Object.keys(raw).filter((k) => !allowedKeys.has(k));
   if (unknownKeys.length > 0) {
     return {
@@ -82,7 +80,6 @@ export function validateSubscribePayload(raw: unknown): ValidationResult {
 
   const emailRaw = raw.email;
   const consentRaw = raw.consent;
-  const captchaTokenRaw = raw.captchaToken;
   const websiteRaw = raw.website;
 
   const email = typeof emailRaw === 'string' ? normalizeEmail(emailRaw) : '';
@@ -114,23 +111,11 @@ export function validateSubscribePayload(raw: unknown): ValidationResult {
     };
   }
 
-  const captchaToken =
-    typeof captchaTokenRaw === 'string' ? captchaTokenRaw.trim() : undefined;
-  if (captchaToken && captchaToken.length > CAPTCHA_MAX_LENGTH) {
-    return {
-      ok: false,
-      statusCode: 400,
-      publicError: 'Solicitud inválida.',
-      internalReason: 'Captcha token too long',
-    };
-  }
-
   return {
     ok: true,
     payload: {
       email,
       consent: true,
-      captchaToken,
       website: website || undefined,
     },
   };

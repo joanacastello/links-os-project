@@ -6,7 +6,6 @@ describe('validateSubscribePayload', () => {
     const result = validateSubscribePayload({
       email: 'User@Example.com ',
       consent: true,
-      captchaToken: 'token',
       website: '',
     });
 

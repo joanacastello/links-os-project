@@ -38,24 +38,16 @@ export function getRequestHost(getHeader: HeaderGetter): string | undefined {
   return undefined;
 }
 
+/** Acepta peticiones sin Origin o cuyo Origin coincide con el Host (mismo sitio). */
 export function isOriginAllowed(params: {
   origin: string | undefined;
   host: string | undefined;
-  allowedOriginsRaw?: string;
 }): boolean {
-  const { origin, host, allowedOriginsRaw } = params;
+  const { origin, host } = params;
   if (!origin) return true;
-
-  if (host) {
-    const localAllowed = new Set([`https://${host}`, `http://${host}`]);
-    if (localAllowed.has(origin)) return true;
-  }
-
-  const allowedOrigins = (allowedOriginsRaw ?? '')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  return allowedOrigins.includes(origin);
+  if (!host) return false;
+  const localAllowed = new Set([`https://${host}`, `http://${host}`]);
+  return localAllowed.has(origin);
 }
 
 export function setCorsHeaders(

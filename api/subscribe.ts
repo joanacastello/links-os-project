@@ -1,5 +1,5 @@
-import { subscribeEmailToBeehiiv } from '../server/beehiivSubscribe';
-import { anonymize, logSecurityEvent } from '../server/security/logging';
+import { subscribeEmailToBeehiiv } from '../server/beehiivSubscribe.js';
+import { anonymize, logSecurityEvent } from '../server/security/logging.js';
 import {
   getRequestHost,
   getRequestOrigin,
@@ -7,10 +7,9 @@ import {
   parseClientIp,
   setApiSecurityHeaders,
   setCorsHeaders,
-} from '../server/security/http';
-import { applyRateLimit } from '../server/security/rateLimit';
-import { validateSubscribePayload } from '../server/security/subscribeValidation';
-import { verifyTurnstileToken } from '../server/security/turnstile';
+} from '../server/security/http.js';
+import { applyRateLimit } from '../server/security/rateLimit.js';
+import { validateSubscribePayload } from '../server/security/subscribeValidation.js';
 
 type VercelReq = {
   method?: string;
@@ -31,13 +30,7 @@ export default async function handler(req: VercelReq, res: VercelRes): Promise<v
     req.headers?.[name] ?? req.headers?.[name.toLowerCase()] ?? req.headers?.[name.toUpperCase()];
   const origin = getRequestOrigin(getHeader);
   const host = getRequestHost(getHeader);
-  const allowedOrigin = isOriginAllowed({
-    origin,
-    host,
-    allowedOriginsRaw: process.env.ALLOWED_SUBSCRIBE_ORIGINS,
-  })
-    ? origin
-    : undefined;
+  const allowedOrigin = isOriginAllowed({ origin, host }) ? origin : undefined;
   setCorsHeaders(res.setHeader, allowedOrigin);
 
   if (req.method === 'OPTIONS') {
@@ -45,7 +38,7 @@ export default async function handler(req: VercelReq, res: VercelRes): Promise<v
     return;
   }
 
-  if (!isOriginAllowed({ origin, host, allowedOriginsRaw: process.env.ALLOWED_SUBSCRIBE_ORIGINS })) {
+  if (!isOriginAllowed({ origin, host })) {
     logSecurityEvent('subscribe_origin_blocked', {
       origin,
       host,
@@ -81,19 +74,6 @@ export default async function handler(req: VercelReq, res: VercelRes): Promise<v
       ipHash: anonymize(clientIp),
     });
     res.status(validation.statusCode).json({ error: validation.publicError });
-    return;
-  }
-
-  const turnstile = await verifyTurnstileToken({
-    token: validation.payload.captchaToken,
-    remoteIp: clientIp,
-  });
-  if (!turnstile.ok) {
-    logSecurityEvent('subscribe_turnstile_failed', {
-      reason: turnstile.internalReason,
-      ipHash: anonymize(clientIp),
-    });
-    res.status(turnstile.statusCode).json({ error: turnstile.publicError });
     return;
   }
 
