@@ -40,10 +40,30 @@ export function getInitialPositions(): Record<AppSlotId, CellPos> {
     terminal: { row: 2, col: 1 },
     advent: { row: 3, col: 0 },
     projects: { row: 3, col: 1 },
-    github: { row: 4, col: 0 },
-    soundcloud: { row: 4, col: 1 },
-    edits: { row: 5, col: 0 },
+    edits: { row: 4, col: 0 },
+    github: { row: 4, col: 2 },
+    soundcloud: { row: 4, col: 3 },
   };
+}
+
+function isSamePos(a: CellPos, b: CellPos): boolean {
+  return a.row === b.row && a.col === b.col;
+}
+
+/**
+ * Layout por defecto anterior (antes del ajuste visual pedido).
+ * Si detectamos exactamente este patrón, lo migramos al nuevo default.
+ */
+function isLegacyDefaultLayout(positions: Record<AppSlotId, CellPos>): boolean {
+  return (
+    isSamePos(positions.newsletter, { row: 2, col: 0 }) &&
+    isSamePos(positions.terminal, { row: 2, col: 1 }) &&
+    isSamePos(positions.advent, { row: 3, col: 0 }) &&
+    isSamePos(positions.projects, { row: 3, col: 1 }) &&
+    isSamePos(positions.github, { row: 4, col: 0 }) &&
+    isSamePos(positions.soundcloud, { row: 4, col: 1 }) &&
+    isSamePos(positions.edits, { row: 5, col: 0 })
+  );
 }
 
 function buildOccupancy(
@@ -162,6 +182,7 @@ export function loadSavedPositions(): Record<AppSlotId, CellPos> | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Record<AppSlotId, CellPos>;
     if (!positionsAreValid(parsed)) return null;
+    if (isLegacyDefaultLayout(parsed)) return null;
     return parsed;
   } catch {
     return null;

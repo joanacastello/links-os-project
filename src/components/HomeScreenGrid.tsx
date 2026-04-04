@@ -15,6 +15,11 @@ import {
 
 const LONG_PRESS_MS = 1000;
 const MOVE_CANCEL_PX = 14;
+const MOBILE_PROFILE_ROW_HEIGHT = 74;
+const MOBILE_APPS_ROW_HEIGHT = 84;
+const MOBILE_GRID_GAP = 8;
+const MOBILE_APP_ICON_SIZE = 74 * 0.81;
+const MOBILE_VIBE_ICON_SIZE = MOBILE_APPS_ROW_HEIGHT + MOBILE_GRID_GAP + MOBILE_APP_ICON_SIZE;
 
 const HOME_LINKS: Record<AppSlotId, string> = {
   newsletter: 'https://www.elbackstage.com/',
@@ -22,7 +27,7 @@ const HOME_LINKS: Record<AppSlotId, string> = {
   advent: '#',
   projects: '#',
   github: 'https://github.com/joanacastello',
-  soundcloud: 'https://soundcloud.com/joanacastello/tracks',
+  soundcloud: 'https://soundcloud.com/joanacastello?utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing',
   edits: 'https://wa.me/34694206233',
 };
 
@@ -123,7 +128,7 @@ function AppDragPreview({ appId }: { appId: AppSlotId }) {
       >
         {appIconFor(appId)}
       </div>
-      <span className="text-[12px] font-medium leading-none text-white drop-shadow-md">
+      <span className="text-[12px] font-medium leading-none text-neutral-800">
         {appMeta(appId).label}
       </span>
     </>
@@ -133,11 +138,23 @@ function AppDragPreview({ appId }: { appId: AppSlotId }) {
 interface HomeScreenGridProps {
   onOpenAdvent?: () => void;
   onOpenVibe?: () => void;
+  onOpenZero2Hero?: () => void;
+  onOpenOnAnem?: () => void;
+  openProjectsFolderOnMount?: boolean;
+  onProjectsFolderOpenHandled?: () => void;
 }
 
-export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenGridProps) {
+export default function HomeScreenGrid({
+  onOpenAdvent,
+  onOpenVibe,
+  onOpenZero2Hero,
+  onOpenOnAnem,
+  openProjectsFolderOnMount = false,
+  onProjectsFolderOpenHandled,
+}: HomeScreenGridProps) {
   const [positions, setPositions] = useState<Record<AppSlotId, CellPos>>(getInitialPositions);
   const [isProjectsFolderOpen, setIsProjectsFolderOpen] = useState(false);
+  const [isMobileLayout, setIsMobileLayout] = useState(false);
   const [draggingId, setDraggingId] = useState<AppSlotId | null>(null);
   const [previewCell, setPreviewCell] = useState<CellPos | null>(null);
   const [previewAnchor, setPreviewAnchor] = useState<{ x: number; y: number } | null>(null);
@@ -159,6 +176,12 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
   }, []);
 
   useEffect(() => {
+    if (!openProjectsFolderOnMount) return;
+    setIsProjectsFolderOpen(true);
+    onProjectsFolderOpenHandled?.();
+  }, [openProjectsFolderOnMount, onProjectsFolderOpenHandled]);
+
+  useEffect(() => {
     if (!isProjectsFolderOpen) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setIsProjectsFolderOpen(false);
@@ -166,6 +189,17 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isProjectsFolderOpen]);
+
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)');
+    const onMediaChange = () => setIsMobileLayout(mql.matches);
+    onMediaChange();
+    mql.addEventListener('change', onMediaChange);
+
+    return () => {
+      mql.removeEventListener('change', onMediaChange);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isProjectsFolderOpen) return;
@@ -383,15 +417,20 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
   const allowedCells = listAllowedCells();
 
   return (
-    <>
+    <div className="relative flex min-h-0 flex-1 flex-col">
+      <div className="h-full w-full">
       <div
         className="grid h-full min-h-0 grid-cols-4 gap-2.5 max-md:gap-2 md:gap-[15px]"
-        style={{ gridTemplateRows: 'repeat(6, minmax(0, 1fr))' }}
+        style={{
+          gridTemplateRows: isMobileLayout
+            ? `${MOBILE_PROFILE_ROW_HEIGHT}px ${MOBILE_PROFILE_ROW_HEIGHT}px repeat(4, ${MOBILE_APPS_ROW_HEIGHT}px)`
+            : 'repeat(6, minmax(0, 1fr))',
+        }}
       >
         <LinkWidget
           variant="profile"
           caption="Sobre Mi"
-          className="col-span-4 row-span-2 h-full min-h-0 max-md:max-h-[90%] max-md:self-start md:max-h-[90%] md:self-end"
+          className="col-span-4 row-span-2 h-full min-h-0 max-md:max-h-[82%] max-md:self-start md:max-h-[90%] md:self-end"
           profileImage="/foto-joana.png"
           firstName="Joana"
           lastName="Castelló"
@@ -402,6 +441,7 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
           onInternalNavigate={onOpenVibe}
           aria-label="Aprende Vibe Coding"
           className="col-start-3 row-start-3 col-span-2 row-span-2 h-full min-h-0"
+          iconSizeMobilePx={MOBILE_VIBE_ICON_SIZE}
           icon={
             <img
               src="/app-icons/sa-logo.png"
@@ -423,7 +463,7 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
               ref={(el) => registerSlot(pos, el)}
               data-grid-row={pos.row}
               data-grid-col={pos.col}
-              className="relative flex h-full min-h-0 min-w-0 items-center justify-center md:items-end"
+              className="relative flex h-full min-h-0 min-w-0 items-start justify-center md:items-end"
               style={{
                 gridRowStart: pos.row + 1,
                 gridColumnStart: pos.col + 1,
@@ -473,9 +513,10 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
           );
         })}
       </div>
+      </div>
 
       <div
-        className={`absolute -bottom-[8.5rem] -left-4 -right-4 -top-4 z-[120] flex items-center justify-center backdrop-blur-[24px] transition-opacity duration-220 md:-top-14 max-md:fixed max-md:inset-[0.375rem] max-md:overflow-hidden max-md:rounded-[34px] ${
+        className={`absolute z-[120] flex items-center justify-center backdrop-blur-[24px] transition-opacity duration-220 -left-4 -right-4 -bottom-[8.5rem] -top-4 md:-top-14 max-md:-left-2.5 max-md:-right-2.5 max-md:-top-3 max-md:-bottom-24 ${
           isProjectsFolderOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
         }`}
         onClick={() => setIsProjectsFolderOpen(false)}
@@ -487,7 +528,7 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
           ref={projectsPanelRef}
           onClick={(e) => e.stopPropagation()}
         >
-          <p id="projects-folder-title" className="mb-5 w-full text-left text-[30px] font-bold text-white drop-shadow-sm">
+          <p id="projects-folder-title" className="mb-5 w-full text-left text-[30px] font-bold text-neutral-800">
             Proyectos
           </p>
           <div
@@ -500,6 +541,10 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
               <div className="grid h-[292px] w-[256px] grid-cols-3 grid-rows-3 place-items-center gap-x-3 gap-y-2">
                 <button
                   type="button"
+                  onClick={() => {
+                    setIsProjectsFolderOpen(false);
+                    onOpenZero2Hero?.();
+                  }}
                   className="flex h-[82px] w-[72px] flex-col items-center justify-start gap-1 rounded-xl p-1.5 transition-colors hover:bg-white/10"
                 >
                   <div className="h-[56px] w-[56px] shrink-0 aspect-square overflow-hidden rounded-[13px] shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
@@ -513,10 +558,14 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
                       className="size-full aspect-square object-contain object-center"
                     />
                   </div>
-                  <span className="text-[10px] font-medium leading-none text-white drop-shadow-sm">Zero2Hero</span>
+                  <span className="text-[10px] font-medium leading-none text-neutral-800">Zero2Hero</span>
                 </button>
                 <button
                   type="button"
+                  onClick={() => {
+                    setIsProjectsFolderOpen(false);
+                    onOpenOnAnem?.();
+                  }}
                   className="flex h-[82px] w-[72px] flex-col items-center justify-start gap-1 rounded-xl p-1.5 transition-colors hover:bg-white/10"
                 >
                   <div className="h-[56px] w-[56px] shrink-0 aspect-square overflow-hidden rounded-[13px] shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
@@ -530,7 +579,7 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
                       className="size-full aspect-square object-contain object-center"
                     />
                   </div>
-                  <span className="text-[10px] font-medium leading-none text-white drop-shadow-sm">On Anem</span>
+                  <span className="text-[10px] font-medium leading-none text-neutral-800">On Anem</span>
                 </button>
               </div>
             </div>
@@ -562,6 +611,6 @@ export default function HomeScreenGrid({ onOpenAdvent, onOpenVibe }: HomeScreenG
           <AppDragPreview appId={draggingId} />
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

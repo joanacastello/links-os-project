@@ -6,6 +6,8 @@ interface PhoneFrameProps {
   innerScreenClassName?: string;
   /** Sobrescribe color de la barra de hora (p. ej. texto claro sobre fondo oscuro). */
   statusBarClassName?: string;
+  /** Escala proporcional del contenido en mobile (sin encoger el marco/fondo). */
+  enableMobileContentScale?: boolean;
 }
 
 function getNowLabel() {
@@ -16,22 +18,67 @@ function getNowLabel() {
   }).format(new Date());
 }
 
+const MOBILE_FRAME_BASE_HEIGHT = 622;
+const MOBILE_FRAME_VERTICAL_MARGIN = 12;
+
 export default function PhoneFrame({
   children,
   innerScreenClassName = 'bg-[#E5DBCF]',
   statusBarClassName,
+  enableMobileContentScale = false,
 }: PhoneFrameProps) {
   const [timeLabel, setTimeLabel] = useState(getNowLabel);
+  const [mobileScale, setMobileScale] = useState(1);
+  const [isMobileLayout, setIsMobileLayout] = useState(false);
 
   useEffect(() => {
     const id = window.setInterval(() => setTimeLabel(getNowLabel()), 1000 * 30);
     return () => window.clearInterval(id);
   }, []);
 
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)');
+
+    const updateMobileScale = () => {
+      const mobile = mql.matches;
+      setIsMobileLayout(mobile);
+      if (!mobile) {
+        setMobileScale(1);
+        return;
+      }
+
+      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const availableHeight = Math.max(0, viewportHeight - MOBILE_FRAME_VERTICAL_MARGIN);
+      const scale = Math.min(1, availableHeight / MOBILE_FRAME_BASE_HEIGHT);
+      setMobileScale(scale);
+    };
+
+    updateMobileScale();
+    window.addEventListener('resize', updateMobileScale);
+    mql.addEventListener('change', updateMobileScale);
+
+    return () => {
+      window.removeEventListener('resize', updateMobileScale);
+      mql.removeEventListener('change', updateMobileScale);
+    };
+  }, []);
+
   return (
-    <div className="relative mx-auto flex w-[400px] max-w-[min(400px,calc(100vw-0.75rem))] shrink-0 flex-col items-center justify-center max-md:fixed max-md:bottom-[0.375rem] max-md:top-[0.375rem] max-md:left-1/2 max-md:mx-0 max-md:h-[calc(100svh-0.75rem)] max-md:w-[min(400px,calc(100vw-0.75rem))] max-md:-translate-x-1/2 max-md:items-stretch max-md:justify-stretch md:max-w-[calc(100vw-1rem)] md:rounded-[40px] md:bg-black md:p-2 md:shadow-phone-device">
+    <div
+      className="relative mx-auto flex w-[384px] max-w-[min(384px,calc(100vw-0.75rem))] shrink-0 flex-col items-center justify-center max-md:fixed max-md:bottom-[0.375rem] max-md:top-[0.375rem] max-md:left-1/2 max-md:mx-0 max-md:h-[calc(100svh-0.75rem)] max-md:w-[min(384px,calc(100vw-0.75rem))] max-md:items-stretch max-md:justify-stretch md:max-w-[calc(100vw-1rem)] md:rounded-[40px] md:bg-black md:p-2 md:shadow-phone-device"
+      style={isMobileLayout ? { transform: 'translateX(-50%)' } : undefined}
+    >
       <div
         className={`relative flex h-[min(720px,calc(100svh-8px))] w-full shrink-0 flex-col overflow-hidden rounded-[34px] md:h-[800px] max-md:h-full ${innerScreenClassName}`}
+        style={
+          enableMobileContentScale && isMobileLayout
+            ? {
+                height: `${100 / mobileScale}%`,
+                transform: `scale(${mobileScale})`,
+                transformOrigin: 'top center',
+              }
+            : undefined
+        }
       >
         <div
           className={`absolute inset-x-0 top-0 z-[200] hidden h-12 px-6 pt-4 font-sans text-xs md:flex ${

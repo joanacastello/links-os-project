@@ -38,11 +38,13 @@ export default function LinkAppIcon({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`group flex h-full min-h-0 flex-col items-center justify-center gap-2 md:justify-end ${className}`}
+      className={`group flex h-full min-h-0 flex-col items-center justify-start gap-2 md:justify-end ${className}`}
       {...anchorProps}
     >
       <div className={`${frameClass} transition-transform duration-200 group-active:scale-95`}>{icon}</div>
-      <span className="text-[12px] leading-none text-white font-medium text-center drop-shadow-md">{label}</span>
+      <span className="shrink-0 text-center text-[12px] font-medium leading-none text-neutral-800">
+        {label}
+      </span>
     </a>
   );
 }
