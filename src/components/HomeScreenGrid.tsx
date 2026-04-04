@@ -1,8 +1,11 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import LinkAppIcon from './LinkAppIcon';
 import LinkWidget from './LinkWidget';
+import { PHONE_INNER_SCREEN_ELEMENT_ID } from './PhoneFrame';
 import {
+  CSS_DESKTOP_HOME_APP_ROW_HEIGHT,
   getInitialPositions,
   listAllowedCells,
   loadSavedPositions,
@@ -171,6 +174,11 @@ export default function HomeScreenGrid({
   const skipClickRef = useRef(false);
   const slotElementsRef = useRef<Map<string, HTMLElement | null>>(new Map());
   const projectsPanelRef = useRef<HTMLDivElement | null>(null);
+  const [projectsPortalRoot, setProjectsPortalRoot] = useState<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    setProjectsPortalRoot(document.getElementById(PHONE_INNER_SCREEN_ELEMENT_ID));
+  }, []);
 
   useEffect(() => {
     const saved = loadSavedPositions();
@@ -193,6 +201,15 @@ export default function HomeScreenGrid({
       mql.removeEventListener('change', onMediaChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isProjectsFolderOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsProjectsFolderOpen(false);
+    };
+    globalThis.addEventListener('keydown', onKeyDown);
+    return () => globalThis.removeEventListener('keydown', onKeyDown);
+  }, [isProjectsFolderOpen]);
 
   useEffect(() => {
     if (!isProjectsFolderOpen) return;
@@ -410,15 +427,22 @@ export default function HomeScreenGrid({
   const allowedCells = listAllowedCells();
 
   return (
-    <div className="relative flex min-h-0 flex-1 flex-col">
+    <div className="relative flex h-full min-h-0 flex-1 flex-col">
       <div className="h-full w-full">
       <div
         className="grid h-full min-h-0 grid-cols-4 gap-2.5 max-md:gap-2 md:gap-[15px]"
-        style={{
-          gridTemplateRows: isMobileLayout
-            ? `${MOBILE_PROFILE_ROW_HEIGHT}px ${MOBILE_PROFILE_ROW_HEIGHT}px repeat(4, ${MOBILE_APPS_ROW_HEIGHT}px)`
-            : 'repeat(6, minmax(0, 1fr))',
-        }}
+        style={
+          isMobileLayout
+            ? {
+                gridTemplateRows: `${MOBILE_PROFILE_ROW_HEIGHT}px ${MOBILE_PROFILE_ROW_HEIGHT}px repeat(4, ${MOBILE_APPS_ROW_HEIGHT}px)`,
+              }
+            : ({
+                gridTemplateRows: `minmax(0, 1fr) minmax(0, 1fr) ${CSS_DESKTOP_HOME_APP_ROW_HEIGHT} ${CSS_DESKTOP_HOME_APP_ROW_HEIGHT} minmax(0, 1fr) minmax(0, 1fr)`,
+                ['--desktop-app-row-height' as string]: CSS_DESKTOP_HOME_APP_ROW_HEIGHT,
+                ['--desktop-vibe-square-max' as string]:
+                  'min(100%, calc(2 * var(--desktop-app-row-height) + 15px))',
+              } as CSSProperties)
+        }
       >
         <LinkWidget
           variant="profile"
@@ -508,75 +532,77 @@ export default function HomeScreenGrid({
       </div>
       </div>
 
-      <dialog
-        open={isProjectsFolderOpen ? true : undefined}
-        onCancel={(e) => {
-          e.preventDefault();
-          setIsProjectsFolderOpen(false);
-        }}
-        className="absolute z-[120] m-0 flex max-h-none w-full max-w-none items-center justify-center border-0 bg-transparent p-0 backdrop-blur-[24px] transition-opacity duration-220 -left-4 -right-4 -bottom-[8.5rem] -top-4 md:-top-14 max-md:-left-2.5 max-md:-right-2.5 max-md:-top-3 max-md:-bottom-24 [&::backdrop]:bg-transparent"
-        aria-labelledby="projects-folder-title"
-        aria-modal="true"
-      >
-        <div
-          className={`flex w-full max-w-[320px] flex-col items-center transition-transform duration-220 ${
-            isProjectsFolderOpen ? 'translate-y-0 scale-100' : 'translate-y-2 scale-95'
-          }`}
-          ref={projectsPanelRef}
-        >
-          <p id="projects-folder-title" className="mb-5 w-full text-left text-[30px] font-bold text-neutral-800">
-            Proyectos
-          </p>
-          <div className="dock-glass h-[min(320px,calc(100vw-2rem))] w-[min(320px,calc(100vw-2rem))] rounded-[30px] border border-white/40 shadow-[0_18px_42px_rgba(0,0,0,0.28)] backdrop-blur-[24px]">
-            <div className="grid h-full w-full place-items-center px-4 pb-3 pt-1">
-              <div className="grid h-[292px] w-[256px] grid-cols-3 grid-rows-3 place-items-center gap-x-3 gap-y-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsProjectsFolderOpen(false);
-                    onOpenZero2Hero?.();
-                  }}
-                  className="flex h-[82px] w-[72px] flex-col items-center justify-start gap-1 rounded-xl p-1.5 transition-colors hover:bg-white/10"
+      {isProjectsFolderOpen && projectsPortalRoot
+        ? createPortal(
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="projects-folder-title"
+              className="pointer-events-auto absolute inset-0 z-[120] flex items-center justify-center rounded-[34px] border-0 bg-black/25 p-0 backdrop-blur-[24px] transition-opacity duration-220 [-webkit-backdrop-filter:blur(24px)]"
+            >
+              <div
+                className="flex w-full max-w-[320px] flex-col items-center px-2 transition-transform duration-220 translate-y-0 scale-100"
+                ref={projectsPanelRef}
+              >
+                <p
+                  id="projects-folder-title"
+                  className="mb-5 w-full text-left text-[30px] font-bold text-neutral-800"
                 >
-                  <div className="h-[56px] w-[56px] shrink-0 aspect-square overflow-hidden rounded-[13px] shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
-                    <img
-                      src="/zero2hero/zero2hero-icon.png"
-                      alt=""
-                      width={128}
-                      height={128}
-                      decoding="async"
-                      draggable={false}
-                      className="size-full aspect-square object-contain object-center"
-                    />
+                  Proyectos
+                </p>
+                <div className="dock-glass h-[min(320px,calc(100vw-2rem))] w-[min(320px,calc(100vw-2rem))] rounded-[30px] border border-white/40 shadow-[0_18px_42px_rgba(0,0,0,0.28)] backdrop-blur-[24px]">
+                  <div className="grid h-full w-full place-items-center px-4 pb-3 pt-1">
+                    <div className="grid h-[292px] w-[256px] grid-cols-3 grid-rows-3 place-items-center gap-x-3 gap-y-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProjectsFolderOpen(false);
+                          onOpenZero2Hero?.();
+                        }}
+                        className="flex h-[82px] w-[72px] flex-col items-center justify-start gap-1 rounded-xl p-1.5 transition-colors hover:bg-white/10"
+                      >
+                        <div className="h-[56px] w-[56px] shrink-0 aspect-square overflow-hidden rounded-[13px] shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                          <img
+                            src="/zero2hero/zero2hero-icon.png"
+                            alt=""
+                            width={128}
+                            height={128}
+                            decoding="async"
+                            draggable={false}
+                            className="size-full aspect-square object-contain object-center"
+                          />
+                        </div>
+                        <span className="text-[10px] font-medium leading-none text-neutral-800">Zero2Hero</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProjectsFolderOpen(false);
+                          onOpenOnAnem?.();
+                        }}
+                        className="flex h-[82px] w-[72px] flex-col items-center justify-start gap-1 rounded-xl p-1.5 transition-colors hover:bg-white/10"
+                      >
+                        <div className="h-[56px] w-[56px] shrink-0 aspect-square overflow-hidden rounded-[13px] shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
+                          <img
+                            src="/onanem/onanem-icon.png"
+                            alt=""
+                            width={128}
+                            height={128}
+                            decoding="async"
+                            draggable={false}
+                            className="size-full aspect-square object-contain object-center"
+                          />
+                        </div>
+                        <span className="text-[10px] font-medium leading-none text-neutral-800">On Anem</span>
+                      </button>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-medium leading-none text-neutral-800">Zero2Hero</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsProjectsFolderOpen(false);
-                    onOpenOnAnem?.();
-                  }}
-                  className="flex h-[82px] w-[72px] flex-col items-center justify-start gap-1 rounded-xl p-1.5 transition-colors hover:bg-white/10"
-                >
-                  <div className="h-[56px] w-[56px] shrink-0 aspect-square overflow-hidden rounded-[13px] shadow-[0_6px_14px_rgba(0,0,0,0.2)]">
-                    <img
-                      src="/onanem/onanem-icon.png"
-                      alt=""
-                      width={128}
-                      height={128}
-                      decoding="async"
-                      draggable={false}
-                      className="size-full aspect-square object-contain object-center"
-                    />
-                  </div>
-                  <span className="text-[10px] font-medium leading-none text-neutral-800">On Anem</span>
-                </button>
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </dialog>
+            </div>,
+            projectsPortalRoot,
+          )
+        : null}
 
       {draggingId && previewAnchor ? (
         <div

@@ -107,9 +107,9 @@ function App() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_90%_at_50%_-15%,rgba(255,255,255,0.5),transparent_52%),radial-gradient(ellipse_100%_70%_at_50%_110%,rgba(55,50,45,0.06),transparent_45%)]" />
         ) : null}
         <div
-          className={`relative z-10 flex min-h-0 w-full flex-1 flex-col ${contentOuterClass}`}
+          className={`relative z-10 flex h-full min-h-0 w-full flex-1 flex-col ${contentOuterClass}`}
         >
-          <div className={`relative flex min-h-0 flex-1 flex-col ${contentInnerClass}`}>
+          <div className={`relative flex h-full min-h-0 flex-1 flex-col ${contentInnerClass}`}>
             <ActiveScreen
               view={view}
               openProjectsFolderOnHome={openProjectsFolderOnHome}

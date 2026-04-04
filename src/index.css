@@ -34,6 +34,29 @@
   -webkit-backdrop-filter: blur(20px);
 }
 
+@media (min-width: 768px) {
+  /**
+   * Widget SA (Vibe): cuadrado que no supera el ancho de 2 columnas ni la altura filas 3–4 + gap (15px).
+   * `--desktop-app-row-height` la define el grid en `HomeScreenGrid` (misma expresión que `CSS_DESKTOP_HOME_APP_ROW_HEIGHT`).
+   */
+  .link-widget-vibe-square {
+    width: var(
+      --desktop-vibe-square-max,
+      min(100%, calc(2 * (74px * 0.81 + 0.5rem + 12px) + 15px))
+    );
+    aspect-ratio: 1;
+    height: auto;
+  }
+
+  .link-widget-vibe-caption {
+    width: var(
+      --desktop-vibe-square-max,
+      min(100%, calc(2 * (74px * 0.81 + 0.5rem + 12px) + 15px))
+    );
+    text-align: center;
+  }
+}
+
 @media (max-width: 768px) {
   input,
   textarea,

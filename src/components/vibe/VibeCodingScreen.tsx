@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import ScreenBackButton from '../ScreenBackButton';
 import { SA_COMMUNITY_EXTERNAL_URL } from '../../config/saCommunity';
-import { PRIVACY_CONTACT_EMAIL, TURNSTILE_SITE_KEY } from '../../config/security';
+import { TURNSTILE_SITE_KEY } from '../../config/security';
 import { requestNewsletterSubscribe } from '../../lib/requestNewsletterSubscribe';
 import TurnstileWidget from './TurnstileWidget';
 
@@ -10,6 +10,9 @@ const BG = '#05142b';
 /** Fondo del modal de confirmación (navy). */
 const DIALOG_MODAL_BG = '#162145';
 const ACCENT_ORANGE = '#ff8522';
+
+const BEEHIIV_TERMS_URL = 'https://www.beehiiv.com/tou';
+const BEEHIIV_PRIVACY_URL = 'https://www.beehiiv.com/privacy';
 
 function mulberry32(seed: number) {
   return function () {
@@ -153,7 +156,7 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
       return;
     }
     if (!consent) {
-      setError('Debes aceptar la política de privacidad para continuar.');
+      setError('Debes aceptar el consentimiento para recibir el boletín.');
       return;
     }
     setError(null);
@@ -205,13 +208,11 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
           />
 
           <p className="mt-8 text-[15px] leading-relaxed text-white">
-            Convierte la IA en tu socio estratégico. Construye o escala tu negocio con Vibe Coding y
-            automatizaciones. Tu expedición comienza aquí.
+            ¿Quieres construir proyectos como este, crecer tu negocio con IA, o crear proyectos para otros y
+            vivir de ello?
           </p>
 
-          <p className="mt-6 text-[15px] font-semibold text-white">
-            ¿Te gusta la idea? Deja tu correo aquí
-          </p>
+          <p className="mt-6 text-[15px] font-semibold text-white">Deja tu correo y te cuento cómo.</p>
 
           <div className="mt-4 w-full max-w-[340px]">
             <IosEmailField
@@ -228,28 +229,28 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
                 checked={consent}
                 disabled={loading}
                 onChange={(e) => setConsent(e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 rounded border-white/40 bg-transparent accent-orange-400"
+                className="mt-1 h-4 w-4 shrink-0 rounded-[3px] border border-white/80 bg-white accent-orange-500"
               />
-              <span>
-                Acepto el tratamiento de mi email para comunicaciones de StrategIA Academy. He leído la{' '}
+              <span className="text-neutral-300">
+                Doy mi consentimiento para recibir boletines por correo electrónico.{' '}
                 <a
-                  href="/privacy.html"
+                  href={BEEHIIV_TERMS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline underline-offset-2"
                 >
-                  política de privacidad
+                  Términos de Uso
                 </a>{' '}
-                y la{' '}
+                y{' '}
                 <a
-                  href="/cookies.html"
+                  href={BEEHIIV_PRIVACY_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="underline underline-offset-2"
                 >
-                  política de cookies
+                  Política de Privacidad
                 </a>
-                {'.'}
+                .
               </span>
             </label>
             {TURNSTILE_SITE_KEY ? (
@@ -257,18 +258,6 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
                 <TurnstileWidget siteKey={TURNSTILE_SITE_KEY} onTokenChange={setCaptchaToken} />
               </div>
             ) : null}
-            <p className="mt-3 text-left text-xs leading-relaxed text-neutral-300">
-              Responsable: StrategIA Academy. Finalidad: gestionar tu alta y enviarte novedades.
-              Derechos: acceso, rectificación y supresión en{' '}
-              {PRIVACY_CONTACT_EMAIL ? (
-                <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`} className="underline underline-offset-2">
-                  {PRIVACY_CONTACT_EMAIL}
-                </a>
-              ) : (
-                'nuestro canal de contacto'
-              )}
-              .
-            </p>
             {error ? (
               <p className="mt-2 text-left text-sm text-red-300" role="alert">
                 {error}
@@ -290,20 +279,21 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
         </div>
       ) : null}
 
-      <dialog
-        open={successOpen ? true : undefined}
-        onCancel={(e) => {
-          e.preventDefault();
-          setSuccessOpen(false);
-        }}
-        className="absolute inset-0 z-40 m-0 flex max-h-none w-full max-w-none items-end justify-center border-0 bg-black/45 p-4 pb-8 backdrop-blur-[1px] sm:items-center sm:pb-4 [&::backdrop]:bg-transparent"
-        aria-labelledby="vibe-success-title"
-        aria-modal="true"
-      >
-        <div
-          className="w-full max-w-sm rounded-[1.5rem] border border-white/10 px-8 py-8 text-center text-white shadow-xl"
-          style={{ backgroundColor: DIALOG_MODAL_BG }}
+      {successOpen ? (
+        <dialog
+          open
+          onCancel={(e) => {
+            e.preventDefault();
+            setSuccessOpen(false);
+          }}
+          className="absolute inset-0 z-40 m-0 flex max-h-none w-full max-w-none items-end justify-center border-0 bg-black/45 p-4 pb-8 backdrop-blur-[1px] sm:items-center sm:pb-4 [&::backdrop]:bg-transparent"
+          aria-labelledby="vibe-success-title"
+          aria-modal="true"
         >
+          <div
+            className="w-full max-w-sm rounded-[1.5rem] border border-white/10 px-8 py-8 text-center text-white shadow-xl"
+            style={{ backgroundColor: DIALOG_MODAL_BG }}
+          >
             <img
               src="/sa/lock.png"
               alt=""
@@ -356,7 +346,8 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
               </button>
             </div>
           </div>
-      </dialog>
+        </dialog>
+      ) : null}
     </div>
   );
 }

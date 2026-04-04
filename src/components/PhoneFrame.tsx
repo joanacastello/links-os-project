@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 
+/** Contenedor de la pantalla redondeada; usado para portales (p. ej. overlay Proyectos edge-to-edge). */
+export const PHONE_INNER_SCREEN_ELEMENT_ID = 'phone-inner-screen';
+
 type PhoneFrameProps = Readonly<{
   children: React.ReactNode;
   /** Fondo del panel interior (pantalla con esquinas redondeadas). Por defecto tono crema del home. */
@@ -70,6 +73,7 @@ export default function PhoneFrame({
       style={isMobileLayout ? { transform: 'translateX(-50%)' } : undefined}
     >
       <div
+        id={PHONE_INNER_SCREEN_ELEMENT_ID}
         className={`relative flex h-[min(720px,calc(100svh-8px))] w-full shrink-0 flex-col overflow-hidden rounded-[34px] md:h-[800px] max-md:h-full ${innerScreenClassName}`}
         style={
           enableMobileContentScale && isMobileLayout

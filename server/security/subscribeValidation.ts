@@ -99,7 +99,7 @@ export function validateSubscribePayload(raw: unknown): ValidationResult {
     return {
       ok: false,
       statusCode: 400,
-      publicError: 'Debes aceptar la política de privacidad.',
+      publicError: 'Debes aceptar el consentimiento para recibir el boletín.',
       internalReason: 'Consent is not true',
     };
   }

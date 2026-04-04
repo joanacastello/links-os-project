@@ -35,7 +35,7 @@ export default function LinkWidget({
   iconSizeMobilePx,
 }: LinkWidgetProps) {
   const profileShellClass = `flex h-full min-h-0 min-w-0 flex-col justify-start gap-2 px-[5px] ${className}`;
-  const linkShellClass = `group flex h-full min-h-0 min-w-0 w-full flex-col items-end justify-start gap-2 px-[5px] md:justify-end ${className}`;
+  const linkShellClass = `group flex h-full min-h-0 min-w-0 w-full flex-col items-end justify-start gap-2 px-[5px] md:justify-start ${className}`;
 
   const body =
     variant === 'profile' ? (
@@ -69,7 +69,7 @@ export default function LinkWidget({
         </div>
       </div>
     ) : (
-      <div className="relative aspect-square w-full min-w-0 shrink-0 overflow-hidden rounded-[26px] shadow-[0_14px_30px_rgba(0,0,0,0.12)] transition-transform duration-200 group-active:scale-[0.98] max-md:w-[var(--vibe-icon-size,128px)] max-md:self-end">
+      <div className="link-widget-vibe-square relative min-w-0 shrink-0 overflow-hidden rounded-[26px] shadow-[0_14px_30px_rgba(0,0,0,0.12)] transition-transform duration-200 group-active:scale-[0.98] max-md:aspect-square max-md:w-[var(--vibe-icon-size,128px)] max-md:self-end">
         {icon}
       </div>
     );
@@ -79,7 +79,7 @@ export default function LinkWidget({
       className={
         variant === 'profile'
           ? 'max-md:-mb-6 shrink-0 text-center text-xs font-medium leading-none text-neutral-800'
-          : 'shrink-0 text-center text-[12px] font-medium leading-none text-neutral-800 max-md:w-[var(--vibe-icon-size,128px)] max-md:self-end'
+          : 'link-widget-vibe-caption shrink-0 text-[12px] font-medium leading-none text-neutral-800 max-md:w-[var(--vibe-icon-size,128px)] max-md:self-end max-md:text-center'
       }
     >
       {caption}

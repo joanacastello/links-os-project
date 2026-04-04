@@ -9,7 +9,7 @@
 
 ## Frontend
 - [ ] Consentimiento explícito antes de enviar email.
-- [ ] Enlace visible a política de privacidad y cookies.
+- [ ] Consentimiento con enlaces visibles a [Términos de Uso](https://www.beehiiv.com/tou) y [Privacidad](https://www.beehiiv.com/privacy) de beehiiv (proveedor del boletín).
 - [ ] URL externa de comunidad validada (`https`).
 
 ## Despliegue

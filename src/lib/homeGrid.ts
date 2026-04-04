@@ -1,6 +1,12 @@
 export const GRID_ROWS = 6;
 export const GRID_COLS = 4;
 
+/**
+ * Altura de fila de apps en home ≥md (debe coincidir con `LinkAppIcon`: shell + gap-2 + etiqueta).
+ * Sincronizar con `--desktop-app-row-height` / `.link-widget-vibe-square` en `index.css`.
+ */
+export const CSS_DESKTOP_HOME_APP_ROW_HEIGHT = 'calc(74px * 0.81 + 0.5rem + 12px)';
+
 export type AppSlotId =
   | 'newsletter'
   | 'terminal'
