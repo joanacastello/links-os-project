@@ -14,17 +14,15 @@ type TurnstileApi = {
   remove: (widgetId: string) => void;
 };
 
-declare global {
-  interface Window {
-    turnstile?: TurnstileApi;
-  }
+function getTurnstileApi(): TurnstileApi | undefined {
+  return (globalThis as unknown as { turnstile?: TurnstileApi }).turnstile;
 }
 
 const SCRIPT_ID = 'cf-turnstile-script';
 const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
 function loadScript(): Promise<void> {
-  if (window.turnstile) return Promise.resolve();
+  if (getTurnstileApi()) return Promise.resolve();
 
   return new Promise((resolve, reject) => {
     const existing = document.getElementById(SCRIPT_ID) as HTMLScriptElement | null;
@@ -54,7 +52,10 @@ type TurnstileWidgetProps = {
   onTokenChange: (token: string) => void;
 };
 
-export default function TurnstileWidget({ siteKey, onTokenChange }: TurnstileWidgetProps) {
+export default function TurnstileWidget({
+  siteKey,
+  onTokenChange,
+}: Readonly<TurnstileWidgetProps>) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
 
@@ -68,8 +69,9 @@ export default function TurnstileWidget({ siteKey, onTokenChange }: TurnstileWid
 
     loadScript()
       .then(() => {
-        if (!isMounted || !containerRef.current || !window.turnstile) return;
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        const turnstile = getTurnstileApi();
+        if (!isMounted || !containerRef.current || !turnstile) return;
+        widgetIdRef.current = turnstile.render(containerRef.current, {
           sitekey: siteKey,
           theme: 'dark',
           callback: (token) => onTokenChange(token),
@@ -83,8 +85,9 @@ export default function TurnstileWidget({ siteKey, onTokenChange }: TurnstileWid
 
     return () => {
       isMounted = false;
-      if (widgetIdRef.current && window.turnstile) {
-        window.turnstile.remove(widgetIdRef.current);
+      const turnstile = getTurnstileApi();
+      if (widgetIdRef.current && turnstile) {
+        turnstile.remove(widgetIdRef.current);
         widgetIdRef.current = null;
       }
     };

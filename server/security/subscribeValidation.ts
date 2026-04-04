@@ -1,6 +1,33 @@
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const EMAIL_MAX_LENGTH = 254;
+const EMAIL_LOCAL_MAX_LENGTH = 64;
+const EMAIL_DOMAIN_MAX_LENGTH = 253;
 const CAPTCHA_MAX_LENGTH = 2_048;
+
+/** Formato razonable para newsletter, sin regex (evita avisos ReDoS en análisis estático). */
+export function isValidSubscribeEmailFormat(email: string): boolean {
+  if (email.length === 0 || email.length > EMAIL_MAX_LENGTH) return false;
+  for (let i = 0; i < email.length; i += 1) {
+    const code = email.charCodeAt(i);
+    if (code <= 32) return false;
+  }
+  const at = email.indexOf('@');
+  if (at <= 0) return false;
+  if (email.indexOf('@', at + 1) !== -1) return false;
+  const local = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  if (
+    local.length === 0 ||
+    local.length > EMAIL_LOCAL_MAX_LENGTH ||
+    domain.length === 0 ||
+    domain.length > EMAIL_DOMAIN_MAX_LENGTH
+  ) {
+    return false;
+  }
+  if (domain.startsWith('.') || domain.endsWith('.')) return false;
+  if (!domain.includes('.')) return false;
+  const labels = domain.split('.');
+  return !labels.some((label) => label.length === 0);
+}
 
 export type SubscribePayload = {
   email: string;
@@ -58,7 +85,7 @@ export function validateSubscribePayload(raw: unknown): ValidationResult {
   const websiteRaw = raw.website;
 
   const email = typeof emailRaw === 'string' ? normalizeEmail(emailRaw) : '';
-  if (!email || email.length > EMAIL_MAX_LENGTH || !EMAIL_RE.test(email)) {
+  if (!email || !isValidSubscribeEmailFormat(email)) {
     return {
       ok: false,
       statusCode: 400,

@@ -86,6 +86,14 @@ const NEIGHBORS: [number, number][] = [
   [0, -1],
 ];
 
+function tryEnqueueCell(pos: CellPos, visited: Set<string>, queue: CellPos[]): void {
+  if (!isAppCellAllowed(pos.row, pos.col)) return;
+  const k = posKey(pos);
+  if (visited.has(k)) return;
+  visited.add(k);
+  queue.push(pos);
+}
+
 /** Primera celda vacía por BFS desde `seeds` (p. ej. vecinos del destino). */
 function findNearestEmptyCell(
   occupied: Map<string, AppSlotId>,
@@ -93,28 +101,15 @@ function findNearestEmptyCell(
 ): CellPos | null {
   const visited = new Set<string>();
   const queue: CellPos[] = [];
-
   for (const s of seeds) {
-    if (!isAppCellAllowed(s.row, s.col)) continue;
-    const k = posKey(s);
-    if (visited.has(k)) continue;
-    visited.add(k);
-    queue.push(s);
+    tryEnqueueCell(s, visited, queue);
   }
 
   while (queue.length > 0) {
     const p = queue.shift()!;
-    const k = posKey(p);
-    if (!occupied.has(k)) return p;
-
+    if (!occupied.has(posKey(p))) return p;
     for (const [dr, dc] of NEIGHBORS) {
-      const nr = p.row + dr;
-      const nc = p.col + dc;
-      if (!isAppCellAllowed(nr, nc)) continue;
-      const nk = posKey({ row: nr, col: nc });
-      if (visited.has(nk)) continue;
-      visited.add(nk);
-      queue.push({ row: nr, col: nc });
+      tryEnqueueCell({ row: p.row + dr, col: p.col + dc }, visited, queue);
     }
   }
   return null;
@@ -124,6 +119,19 @@ function neighborSeeds(target: CellPos): CellPos[] {
   return NEIGHBORS.map(([dr, dc]) => ({ row: target.row + dr, col: target.col + dc })).filter((p) =>
     isAppCellAllowed(p.row, p.col),
   );
+}
+
+function displaceOccupantToNearestFree(
+  next: Record<AppSlotId, CellPos>,
+  occ: Map<string, AppSlotId>,
+  occupant: AppSlotId,
+  target: CellPos,
+): Record<AppSlotId, CellPos> | null {
+  const free = findNearestEmptyCell(occ, neighborSeeds(target));
+  if (!free) return null;
+  next[occupant] = free;
+  occ.set(posKey(free), occupant);
+  return next;
 }
 
 /**
@@ -149,15 +157,15 @@ export function tryMoveApp(
   occ.set(targetKey, appId);
 
   if (!occupant) return next;
+  return displaceOccupantToNearestFree(next, occ, occupant, target);
+}
 
-  const seeds = neighborSeeds(target);
-  const free = findNearestEmptyCell(occ, seeds);
-  if (!free) return null;
-
-  next[occupant] = free;
-  occ.set(posKey(free), occupant);
-
-  return next;
+function registerUniqueAllowedCell(p: CellPos | undefined, seen: Set<string>): boolean {
+  if (!p || !isAppCellAllowed(p.row, p.col)) return false;
+  const k = posKey(p);
+  if (seen.has(k)) return false;
+  seen.add(k);
+  return true;
 }
 
 export function positionsAreValid(positions: Record<AppSlotId, CellPos>): boolean {
@@ -165,25 +173,25 @@ export function positionsAreValid(positions: Record<AppSlotId, CellPos>): boolea
   if (ids.length !== 7) return false;
   const seen = new Set<string>();
   for (const id of ids) {
-    const p = positions[id];
-    if (!p || !isAppCellAllowed(p.row, p.col)) return false;
-    const k = posKey(p);
-    if (seen.has(k)) return false;
-    seen.add(k);
+    if (!registerUniqueAllowedCell(positions[id], seen)) return false;
   }
   return true;
 }
 
 const STORAGE_KEY = 'links-os-home-app-positions';
 
+function parseStoredPositions(raw: string): Record<AppSlotId, CellPos> | null {
+  const parsed = JSON.parse(raw) as Record<AppSlotId, CellPos>;
+  if (!positionsAreValid(parsed)) return null;
+  if (isLegacyDefaultLayout(parsed)) return null;
+  return parsed;
+}
+
 export function loadSavedPositions(): Record<AppSlotId, CellPos> | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Record<AppSlotId, CellPos>;
-    if (!positionsAreValid(parsed)) return null;
-    if (isLegacyDefaultLayout(parsed)) return null;
-    return parsed;
+    return parseStoredPositions(raw);
   } catch {
     return null;
   }

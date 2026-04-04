@@ -9,27 +9,78 @@ import VibeCodingScreen from './components/vibe/VibeCodingScreen';
 
 type AppView = 'home' | 'advent' | 'vibe' | 'zero2hero' | 'onanem';
 
+const INNER_SCREEN_CLASS: Record<AppView, string> = {
+  home: 'bg-[#E5DBCF]',
+  advent: 'bg-[#1D3F25]',
+  vibe: 'bg-[#05142b]',
+  zero2hero: 'bg-white',
+  onanem: 'bg-white',
+};
+
+const STATUS_BAR_CLASS: Partial<Record<AppView, string>> = {
+  advent:
+    'text-[#FEF8E8] [&_.status-bar-pill]:border-[#FEF8E8]/35 [&_.status-bar-pill]:bg-white/10',
+  vibe: 'text-white/85 [&_.status-bar-pill]:border-white/30 [&_.status-bar-pill]:bg-white/10',
+};
+
+const CONTENT_OUTER_HOME =
+  'pointer-events-none max-md:px-2.5 max-md:pb-24 max-md:pt-3 px-4 pb-[8.5rem] pt-4 md:pt-14';
+const CONTENT_OUTER_OTHER = 'min-h-0 flex-col px-0 pb-0 pt-0 md:pt-0';
+
+type ActiveScreenProps = {
+  view: AppView;
+  openProjectsFolderOnHome: boolean;
+  onOpenProjectsFolderHandled: () => void;
+  onOpenAdvent: () => void;
+  onOpenVibe: () => void;
+  onOpenZero2Hero: () => void;
+  onOpenOnAnem: () => void;
+  onBackHome: () => void;
+  onProjectBack: () => void;
+};
+
+function ActiveScreen({
+  view,
+  openProjectsFolderOnHome,
+  onOpenProjectsFolderHandled,
+  onOpenAdvent,
+  onOpenVibe,
+  onOpenZero2Hero,
+  onOpenOnAnem,
+  onBackHome,
+  onProjectBack,
+}: ActiveScreenProps) {
+  switch (view) {
+    case 'home':
+      return (
+        <HomeScreenGrid
+          onOpenAdvent={onOpenAdvent}
+          onOpenVibe={onOpenVibe}
+          onOpenZero2Hero={onOpenZero2Hero}
+          onOpenOnAnem={onOpenOnAnem}
+          openProjectsFolderOnMount={openProjectsFolderOnHome}
+          onProjectsFolderOpenHandled={onOpenProjectsFolderHandled}
+        />
+      );
+    case 'advent':
+      return <AdventCalendarScreen onBack={onBackHome} />;
+    case 'vibe':
+      return <VibeCodingScreen onBack={onBackHome} />;
+    case 'zero2hero':
+      return <Zero2HeroScreen onBack={onProjectBack} />;
+    case 'onanem':
+      return <OnAnemScreen onBack={onProjectBack} />;
+    default:
+      return null;
+  }
+}
+
 function App() {
   const [view, setView] = useState<AppView>('home');
   const [openProjectsFolderOnHome, setOpenProjectsFolderOnHome] = useState(false);
 
-  const innerScreenClassName =
-    view === 'advent'
-      ? 'bg-[#1D3F25]'
-      : view === 'vibe'
-        ? 'bg-[#05142b]'
-        : view === 'zero2hero'
-          ? 'bg-white'
-          : view === 'onanem'
-            ? 'bg-white'
-        : 'bg-[#E5DBCF]';
-
-  const statusBarClassName =
-    view === 'advent'
-      ? 'text-[#FEF8E8] [&_.status-bar-pill]:border-[#FEF8E8]/35 [&_.status-bar-pill]:bg-white/10'
-      : view === 'vibe'
-        ? 'text-white/85 [&_.status-bar-pill]:border-white/30 [&_.status-bar-pill]:bg-white/10'
-        : undefined;
+  const innerScreenClassName = INNER_SCREEN_CLASS[view];
+  const statusBarClassName = STATUS_BAR_CLASS[view];
 
   const openProjectView = (target: 'zero2hero' | 'onanem') => {
     setOpenProjectsFolderOnHome(false);
@@ -41,43 +92,38 @@ function App() {
     setView('home');
   };
 
+  const isHome = view === 'home';
+  const contentOuterClass = isHome ? CONTENT_OUTER_HOME : CONTENT_OUTER_OTHER;
+  const contentInnerClass = isHome ? 'pointer-events-auto' : '';
+
   return (
     <main className="flex min-h-svh flex-col items-center justify-start overflow-x-hidden bg-[#B0ADA0] max-md:h-svh max-md:overflow-hidden max-md:px-0 max-md:pb-0 max-md:pt-0 md:overflow-y-auto md:px-[clamp(0.375rem,2vw,1.5rem)] md:pb-[clamp(0.75rem,2.5vw,2.25rem)] md:pt-[clamp(0.375rem,2vw,1.5rem)]">
       <PhoneFrame
         innerScreenClassName={innerScreenClassName}
         statusBarClassName={statusBarClassName}
-        enableMobileContentScale={view === 'home'}
+        enableMobileContentScale={isHome}
       >
-        {view === 'home' ? (
+        {isHome ? (
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_120%_90%_at_50%_-15%,rgba(255,255,255,0.5),transparent_52%),radial-gradient(ellipse_100%_70%_at_50%_110%,rgba(55,50,45,0.06),transparent_45%)]" />
         ) : null}
         <div
-          className={`relative z-10 flex min-h-0 w-full flex-1 flex-col ${
-            view === 'home'
-              ? 'pointer-events-none max-md:px-2.5 max-md:pb-24 max-md:pt-3 px-4 pb-[8.5rem] pt-4 md:pt-14'
-              : 'min-h-0 flex-col px-0 pb-0 pt-0 md:pt-0'
-          }`}
+          className={`relative z-10 flex min-h-0 w-full flex-1 flex-col ${contentOuterClass}`}
         >
-          <div className={`relative flex min-h-0 flex-1 flex-col ${view === 'home' ? 'pointer-events-auto' : ''}`}>
-            {view === 'home' ? (
-              <HomeScreenGrid
-                onOpenAdvent={() => setView('advent')}
-                onOpenVibe={() => setView('vibe')}
-                onOpenZero2Hero={() => openProjectView('zero2hero')}
-                onOpenOnAnem={() => openProjectView('onanem')}
-                openProjectsFolderOnMount={openProjectsFolderOnHome}
-                onProjectsFolderOpenHandled={() => setOpenProjectsFolderOnHome(false)}
-              />
-            ) : null}
-            {view === 'advent' ? (
-              <AdventCalendarScreen onBack={() => setView('home')} />
-            ) : null}
-            {view === 'vibe' ? <VibeCodingScreen onBack={() => setView('home')} /> : null}
-            {view === 'zero2hero' ? <Zero2HeroScreen onBack={handleProjectBack} /> : null}
-            {view === 'onanem' ? <OnAnemScreen onBack={handleProjectBack} /> : null}
+          <div className={`relative flex min-h-0 flex-1 flex-col ${contentInnerClass}`}>
+            <ActiveScreen
+              view={view}
+              openProjectsFolderOnHome={openProjectsFolderOnHome}
+              onOpenProjectsFolderHandled={() => setOpenProjectsFolderOnHome(false)}
+              onOpenAdvent={() => setView('advent')}
+              onOpenVibe={() => setView('vibe')}
+              onOpenZero2Hero={() => openProjectView('zero2hero')}
+              onOpenOnAnem={() => openProjectView('onanem')}
+              onBackHome={() => setView('home')}
+              onProjectBack={handleProjectBack}
+            />
           </div>
         </div>
-        {view === 'home' ? <LinksDock /> : null}
+        {isHome ? <LinksDock /> : null}
       </PhoneFrame>
     </main>
   );

@@ -49,4 +49,17 @@ describe('validateSubscribePayload', () => {
     if (result.ok) return;
     expect(result.publicError).toBe('Solicitud inválida.');
   });
+
+  it('rejects invalid email shape without regex', () => {
+    const cases = ['nope', 'a@b', 'user@@example.com', 'user name@example.com'];
+    for (const email of cases) {
+      const result = validateSubscribePayload({
+        email,
+        consent: true,
+      });
+      expect(result.ok).toBe(false);
+      if (result.ok) return;
+      expect(result.publicError).toBe('Correo no válido.');
+    }
+  });
 });

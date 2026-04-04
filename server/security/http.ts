@@ -13,14 +13,15 @@ export function setApiSecurityHeaders(setHeader: HeaderSetter): void {
 
 export function parseClientIp(getHeader: HeaderGetter): string | undefined {
   const xfwd = getHeader('x-forwarded-for');
-  const first =
-    typeof xfwd === 'string'
-      ? xfwd.split(',')[0]
-      : Array.isArray(xfwd)
-        ? xfwd[0]
-        : undefined;
-  const ip = first?.trim();
-  return ip || undefined;
+  if (typeof xfwd === 'string') {
+    const ip = xfwd.split(',')[0]?.trim();
+    return ip || undefined;
+  }
+  if (Array.isArray(xfwd)) {
+    const ip = xfwd[0]?.trim();
+    return ip || undefined;
+  }
+  return undefined;
 }
 
 export function getRequestOrigin(getHeader: HeaderGetter): string | undefined {
@@ -40,7 +41,7 @@ export function getRequestHost(getHeader: HeaderGetter): string | undefined {
 export function isOriginAllowed(params: {
   origin: string | undefined;
   host: string | undefined;
-  allowedOriginsRaw?: string | undefined;
+  allowedOriginsRaw?: string;
 }): boolean {
   const { origin, host, allowedOriginsRaw } = params;
   if (!origin) return true;
