@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import ScreenBackButton from '../ScreenBackButton';
 import { SA_COMMUNITY_EXTERNAL_URL } from '../../config/saCommunity';
@@ -173,9 +173,18 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
 
   const communityHref = SA_COMMUNITY_EXTERNAL_URL || undefined;
 
+  useEffect(() => {
+    if (!successOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setSuccessOpen(false);
+    };
+    globalThis.addEventListener('keydown', onKeyDown);
+    return () => globalThis.removeEventListener('keydown', onKeyDown);
+  }, [successOpen]);
+
   return (
     <div
-      className="relative flex min-h-0 min-w-0 flex-1 flex-col"
+      className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col"
       style={{ backgroundColor: BG }}
     >
       <StarField />
@@ -270,18 +279,14 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
       ) : null}
 
       {successOpen ? (
-        <dialog
-          open
-          onCancel={(e) => {
-            e.preventDefault();
-            setSuccessOpen(false);
-          }}
-          className="absolute inset-0 z-40 m-0 flex max-h-none w-full max-w-none items-end justify-center border-0 bg-black/45 p-4 pb-8 backdrop-blur-[1px] sm:items-center sm:pb-4 [&::backdrop]:bg-transparent"
-          aria-labelledby="vibe-success-title"
+        <div
+          className="absolute inset-0 z-40 flex items-center justify-center bg-[#020814]/80 p-4 backdrop-blur-md"
+          role="dialog"
           aria-modal="true"
+          aria-labelledby="vibe-success-title"
         >
           <div
-            className="w-full max-w-sm rounded-[1.5rem] border border-white/10 px-8 py-8 text-center text-white shadow-xl"
+            className="max-h-[min(85dvh,100%)] w-full max-w-sm overflow-y-auto overscroll-contain rounded-[1.5rem] border border-white/10 px-8 py-8 text-center text-white shadow-xl"
             style={{ backgroundColor: DIALOG_MODAL_BG }}
           >
             <img
@@ -336,7 +341,7 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
               </button>
             </div>
           </div>
-        </dialog>
+        </div>
       ) : null}
     </div>
   );

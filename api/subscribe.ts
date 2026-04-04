@@ -28,13 +28,14 @@ type VercelRes = {
 };
 
 export default async function handler(req: VercelReq, res: VercelRes): Promise<void> {
-  setApiSecurityHeaders(res.setHeader);
+  const setHeader = (key: string, value: string) => res.setHeader(key, value);
+  setApiSecurityHeaders(setHeader);
   const getHeader = (name: string) =>
     req.headers?.[name] ?? req.headers?.[name.toLowerCase()] ?? req.headers?.[name.toUpperCase()];
   const origin = getRequestOrigin(getHeader);
   const host = getRequestHost(getHeader);
   const allowedOrigin = isOriginAllowed({ origin, host }) ? origin : undefined;
-  setCorsHeaders(res.setHeader, allowedOrigin);
+  setCorsHeaders(setHeader, allowedOrigin);
 
   if (req.method === 'OPTIONS') {
     res.status(204).end();
