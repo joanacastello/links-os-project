@@ -2,7 +2,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import ScreenBackButton from '../ScreenBackButton';
 import { SA_COMMUNITY_EXTERNAL_URL } from '../../config/saCommunity';
+import { PRIVACY_CONTACT_EMAIL, TURNSTILE_SITE_KEY } from '../../config/security';
 import { requestNewsletterSubscribe } from '../../lib/requestNewsletterSubscribe';
+import TurnstileWidget from './TurnstileWidget';
 
 const BG = '#05142b';
 /** Fondo del modal de confirmación (navy). */
@@ -54,12 +56,14 @@ function StarField() {
 function IosEmailField({
   value,
   onChange,
+  onWebsiteChange,
   onSubmit,
   disabled,
   placeholder,
 }: {
   value: string;
   onChange: (v: string) => void;
+  onWebsiteChange: (v: string) => void;
   onSubmit: () => void;
   disabled: boolean;
   placeholder: string;
@@ -90,6 +94,15 @@ function IosEmailField({
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-2xl border border-gray-300 bg-white py-3.5 pl-5 pr-[3.25rem] text-[15px] text-neutral-900 shadow-none outline-none ring-0 placeholder:text-neutral-400 focus:border-gray-400 disabled:opacity-60"
+      />
+      <input
+        type="text"
+        name="website"
+        autoComplete="off"
+        tabIndex={-1}
+        aria-hidden
+        onChange={(e) => onWebsiteChange(e.target.value)}
+        className="absolute left-[-9999px] top-[-9999px] h-px w-px opacity-0"
       />
       <button
         type="submit"
@@ -124,6 +137,9 @@ interface VibeCodingScreenProps {
 
 export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
   const [email, setEmail] = useState('');
+  const [consent, setConsent] = useState(false);
+  const [website, setWebsite] = useState('');
+  const [captchaToken, setCaptchaToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successOpen, setSuccessOpen] = useState(false);
@@ -134,16 +150,26 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
       setError('Introduce un correo válido.');
       return;
     }
+    if (!consent) {
+      setError('Debes aceptar la política de privacidad para continuar.');
+      return;
+    }
     setError(null);
     setLoading(true);
-    const result = await requestNewsletterSubscribe(trimmed);
+    const result = await requestNewsletterSubscribe({
+      email: trimmed,
+      consent,
+      captchaToken: captchaToken || undefined,
+      website,
+    });
     setLoading(false);
     if (!result.ok) {
       setError(result.error);
       return;
     }
+    setCaptchaToken('');
     setSuccessOpen(true);
-  }, [email]);
+  }, [captchaToken, consent, email, website]);
 
   const communityHref = SA_COMMUNITY_EXTERNAL_URL || undefined;
 
@@ -189,10 +215,58 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
             <IosEmailField
               value={email}
               onChange={setEmail}
+              onWebsiteChange={setWebsite}
               onSubmit={onSubmit}
               disabled={loading}
               placeholder="tu@email.com"
             />
+            <label className="mt-3 flex items-start gap-2 text-left text-sm text-neutral-200">
+              <input
+                type="checkbox"
+                checked={consent}
+                disabled={loading}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-1 h-4 w-4 shrink-0 rounded border-white/40 bg-transparent accent-orange-400"
+              />
+              <span>
+                Acepto el tratamiento de mi email para comunicaciones de StrategIA Academy. He leído la{' '}
+                <a
+                  href="/privacy.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  política de privacidad
+                </a>{' '}
+                y la{' '}
+                <a
+                  href="/cookies.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  política de cookies
+                </a>
+                {'.'}
+              </span>
+            </label>
+            {TURNSTILE_SITE_KEY ? (
+              <div className="mt-3">
+                <TurnstileWidget siteKey={TURNSTILE_SITE_KEY} onTokenChange={setCaptchaToken} />
+              </div>
+            ) : null}
+            <p className="mt-3 text-left text-xs leading-relaxed text-neutral-300">
+              Responsable: StrategIA Academy. Finalidad: gestionar tu alta y enviarte novedades.
+              Derechos: acceso, rectificación y supresión en{' '}
+              {PRIVACY_CONTACT_EMAIL ? (
+                <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`} className="underline underline-offset-2">
+                  {PRIVACY_CONTACT_EMAIL}
+                </a>
+              ) : (
+                'nuestro canal de contacto'
+              )}
+              .
+            </p>
             {error ? (
               <p className="mt-2 text-left text-sm text-red-300" role="alert">
                 {error}

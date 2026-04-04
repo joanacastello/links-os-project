@@ -1,6 +1,11 @@
 export type SubscribeResult =
   | { ok: true }
-  | { ok: false; error: string; statusCode: number };
+  | {
+      ok: false;
+      publicError: string;
+      internalReason: string;
+      statusCode: number;
+    };
 
 /** Variables leídas solo desde el entorno (.env / panel del host). */
 type Env = {
@@ -11,6 +16,21 @@ type Env = {
   BEEHIIV_UTM_SOURCE?: string;
   BEEHIIV_UTM_MEDIUM?: string;
 };
+
+const DEFAULT_BEEHIIV_API_BASE = 'https://api.beehiiv.com/v2';
+
+function normalizeApiBase(raw: string | undefined): string {
+  const value = raw?.trim() || DEFAULT_BEEHIIV_API_BASE;
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== 'https:' || parsed.hostname !== 'api.beehiiv.com') {
+      return '';
+    }
+    return `${parsed.origin}${parsed.pathname.replace(/\/$/, '')}`;
+  } catch {
+    return '';
+  }
+}
 
 function extractBeehiivError(body: unknown): string | undefined {
   if (!body || typeof body !== 'object') return undefined;
@@ -23,7 +43,7 @@ export async function subscribeEmailToBeehiiv(
   email: string,
   env: Env = process.env,
 ): Promise<SubscribeResult> {
-  const apiBase = env.BEEHIIV_API_BASE?.trim().replace(/\/$/, '') ?? '';
+  const apiBase = normalizeApiBase(env.BEEHIIV_API_BASE);
   const apiKey = env.BEEHIIV_API_KEY?.trim() ?? '';
   const publicationId = env.BEEHIIV_PUBLICATION_ID?.trim() ?? '';
   const subscribeTag = env.BEEHIIV_SUBSCRIBE_TAG?.trim() ?? '';
@@ -38,7 +58,8 @@ export async function subscribeEmailToBeehiiv(
     if (!subscribeTag) missing.push('BEEHIIV_SUBSCRIBE_TAG');
     return {
       ok: false,
-      error: `Newsletter sin configurar. Falta: ${missing.join(', ')}. Añádelos en .env (raíz del proyecto) y reinicia el servidor (npm run dev) o configúralos en el panel de tu hosting.`,
+      publicError: 'Servicio de newsletter no disponible en este momento.',
+      internalReason: `Missing Beehiiv env vars: ${missing.join(', ')}`,
       statusCode: 503,
     };
   }
@@ -48,9 +69,9 @@ export async function subscribeEmailToBeehiiv(
     'Content-Type': 'application/json',
   };
 
-  const createRes = await fetch(
-    `${apiBase}/publications/${publicationId}/subscriptions`,
-    {
+  let createRes: Response;
+  try {
+    createRes = await fetch(`${apiBase}/publications/${publicationId}/subscriptions`, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -61,8 +82,15 @@ export async function subscribeEmailToBeehiiv(
         utm_source: utmSource,
         utm_medium: utmMedium,
       }),
-    },
-  );
+    });
+  } catch {
+    return {
+      ok: false,
+      publicError: 'No se pudo completar la suscripción. Inténtalo más tarde.',
+      internalReason: 'Beehiiv create subscription network failure',
+      statusCode: 502,
+    };
+  }
 
   const createText = await createRes.text();
   let createJson: unknown;
@@ -71,17 +99,19 @@ export async function subscribeEmailToBeehiiv(
   } catch {
     return {
       ok: false,
-      error: 'Respuesta inválida del servicio de newsletter.',
+      publicError: 'No se pudo completar la suscripción. Inténtalo más tarde.',
+      internalReason: 'Beehiiv create subscription returned invalid JSON',
       statusCode: 502,
     };
   }
 
   if (!createRes.ok) {
-    const msg =
+    const providerMsg =
       extractBeehiivError(createJson) ?? 'No se pudo completar la suscripción.';
     return {
       ok: false,
-      error: msg,
+      publicError: 'No se pudo completar la suscripción. Inténtalo de nuevo.',
+      internalReason: `Beehiiv create subscription failed. HTTP=${createRes.status}, provider=${providerMsg}`,
       statusCode: createRes.status >= 400 && createRes.status < 600 ? createRes.status : 500,
     };
   }
@@ -90,19 +120,27 @@ export async function subscribeEmailToBeehiiv(
   if (!subId) {
     return {
       ok: false,
-      error: 'Respuesta incompleta del servicio de newsletter.',
+      publicError: 'No se pudo completar la suscripción. Inténtalo más tarde.',
+      internalReason: 'Beehiiv create subscription response missing subscription id',
       statusCode: 502,
     };
   }
 
-  const tagRes = await fetch(
-    `${apiBase}/publications/${publicationId}/subscriptions/${subId}/tags`,
-    {
+  let tagRes: Response;
+  try {
+    tagRes = await fetch(`${apiBase}/publications/${publicationId}/subscriptions/${subId}/tags`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ tags: [subscribeTag] }),
-    },
-  );
+    });
+  } catch {
+    return {
+      ok: false,
+      publicError: 'No se pudo completar la suscripción. Inténtalo más tarde.',
+      internalReason: 'Beehiiv tag assignment network failure',
+      statusCode: 502,
+    };
+  }
 
   if (!tagRes.ok) {
     const tagText = await tagRes.text();
@@ -115,7 +153,12 @@ export async function subscribeEmailToBeehiiv(
     const msg =
       extractBeehiivError(tagJson) ??
       'Suscripción creada, pero no se pudo aplicar la etiqueta.';
-    return { ok: false, error: msg, statusCode: tagRes.status };
+    return {
+      ok: false,
+      publicError: 'No se pudo completar la suscripción. Inténtalo de nuevo.',
+      internalReason: `Beehiiv tag assignment failed. HTTP=${tagRes.status}, provider=${msg}`,
+      statusCode: tagRes.status,
+    };
   }
 
   return { ok: true };
