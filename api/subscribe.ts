@@ -31,27 +31,28 @@ export default async function handler(req: VercelReq, res: VercelRes): Promise<v
     req.headers?.[name] ?? req.headers?.[name.toLowerCase()] ?? req.headers?.[name.toUpperCase()];
   const origin = getRequestOrigin(getHeader);
   const host = getRequestHost(getHeader);
-  const allowedOriginsRaw = process.env.ALLOWED_SUBSCRIBE_ORIGINS;
-  const originAllowed = isOriginAllowed({ origin, host, allowedOriginsRaw });
+  const allowedOrigin = isOriginAllowed({
+    origin,
+    host,
+    allowedOriginsRaw: process.env.ALLOWED_SUBSCRIBE_ORIGINS,
+  })
+    ? origin
+    : undefined;
+  setCorsHeaders(res.setHeader, allowedOrigin);
 
   if (req.method === 'OPTIONS') {
-    if (!originAllowed) {
-      logSecurityEvent('subscribe_origin_blocked', { origin, host });
-      res.status(403).json({ error: 'Origen no permitido.' });
-      return;
-    }
-    setCorsHeaders(res.setHeader, origin);
     res.status(204).end();
     return;
   }
 
-  if (!originAllowed) {
-    logSecurityEvent('subscribe_origin_blocked', { origin, host });
+  if (!isOriginAllowed({ origin, host, allowedOriginsRaw: process.env.ALLOWED_SUBSCRIBE_ORIGINS })) {
+    logSecurityEvent('subscribe_origin_blocked', {
+      origin,
+      host,
+    });
     res.status(403).json({ error: 'Origen no permitido.' });
     return;
   }
-
-  setCorsHeaders(res.setHeader, origin);
 
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
