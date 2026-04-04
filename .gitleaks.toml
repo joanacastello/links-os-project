@@ -1,0 +1,13 @@
+# .gitleaks.toml — ignorar falsos positivos
+
+title = "Mi proyecto"
+
+[allowlist]
+  paths = [
+    '''.env.example''',
+    '''README.md''',
+  ]
+  regexes = [
+    '''your-api-key-here''',
+    '''example-token-placeholder''',
+  ]
