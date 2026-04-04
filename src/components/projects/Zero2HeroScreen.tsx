@@ -1,8 +1,8 @@
 import ProjectShowcaseScreen from './ProjectShowcaseScreen';
 
-interface Zero2HeroScreenProps {
+type Zero2HeroScreenProps = Readonly<{
   onBack: () => void;
-}
+}>;
 
 export default function Zero2HeroScreen({ onBack }: Zero2HeroScreenProps) {
   return (

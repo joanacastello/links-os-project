@@ -13,7 +13,7 @@ export const widgetAlignWidthClass = {
   4: 'mx-auto w-full min-w-0 max-w-[calc(4*(74px*0.81)+3*0.5rem)] md:max-w-[calc(4*(74px*0.81)+3*0.75rem)]',
 } as const;
 
-interface LinkAppIconProps {
+type LinkAppIconProps = Readonly<{
   label: string;
   href: string;
   icon: React.ReactNode;
@@ -22,7 +22,7 @@ interface LinkAppIconProps {
   bare?: boolean;
   /** Atributos extra en el `<a>` (p. ej. handlers de arrastre en la home) */
   anchorProps?: Omit<ComponentProps<'a'>, 'href' | 'children' | 'className' | 'target' | 'rel'>;
-}
+}>;
 
 export default function LinkAppIcon({
   label,

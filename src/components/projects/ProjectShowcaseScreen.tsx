@@ -5,7 +5,7 @@ interface ProjectStat {
   value: string;
 }
 
-interface ProjectShowcaseScreenProps {
+type ProjectShowcaseScreenProps = Readonly<{
   onBack: () => void;
   iconSrc: string;
   iconAlt: string;
@@ -18,7 +18,7 @@ interface ProjectShowcaseScreenProps {
   previewImages: string[];
   description: string;
   stack: string;
-}
+}>;
 
 export default function ProjectShowcaseScreen({
   onBack,

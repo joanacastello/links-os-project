@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 
-interface LinkWidgetProps {
+type LinkWidgetProps = Readonly<{
   caption: string;
   /** Omitido en `variant="profile"` (no hay enlace). */
   href?: string;
@@ -18,7 +18,7 @@ interface LinkWidgetProps {
   profileSubtitle?: string;
   /** Tamaño del bloque cuadrado principal en mobile (px). */
   iconSizeMobilePx?: number;
-}
+}>;
 
 export default function LinkWidget({
   caption,
@@ -87,20 +87,19 @@ export default function LinkWidget({
   );
 
   const mobileIconSizeStyle =
-    iconSizeMobilePx !== undefined
+    typeof iconSizeMobilePx === 'number'
       ? ({ '--vibe-icon-size': `${iconSizeMobilePx}px` } as CSSProperties)
       : undefined;
 
   if (variant === 'profile') {
     return (
-      <div
-        className={profileShellClass}
-        role="group"
-        aria-label={`${firstName} ${lastName}`}
-      >
+      <fieldset className={`${profileShellClass} m-0 min-w-0 border-0 p-0`}>
+        <legend className="sr-only">
+          {firstName} {lastName}
+        </legend>
         {body}
         {footer}
-      </div>
+      </fieldset>
     );
   }
 

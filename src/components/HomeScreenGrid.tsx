@@ -114,8 +114,10 @@ function appMeta(id: AppSlotId): { label: string; bare?: boolean } {
   }
 }
 
+type AppDragPreviewProps = Readonly<{ appId: AppSlotId }>;
+
 /** Vista previa semitransparente (misma forma que el icono flotante). */
-function AppDragPreview({ appId }: { appId: AppSlotId }) {
+function AppDragPreview({ appId }: AppDragPreviewProps) {
   const bare = appMeta(appId).bare;
   return (
     <>
@@ -135,14 +137,14 @@ function AppDragPreview({ appId }: { appId: AppSlotId }) {
   );
 }
 
-interface HomeScreenGridProps {
+type HomeScreenGridProps = Readonly<{
   onOpenAdvent?: () => void;
   onOpenVibe?: () => void;
   onOpenZero2Hero?: () => void;
   onOpenOnAnem?: () => void;
   openProjectsFolderOnMount?: boolean;
   onProjectsFolderOpenHandled?: () => void;
-}
+}>;
 
 export default function HomeScreenGrid({
   onOpenAdvent,
@@ -182,16 +184,7 @@ export default function HomeScreenGrid({
   }, [openProjectsFolderOnMount, onProjectsFolderOpenHandled]);
 
   useEffect(() => {
-    if (!isProjectsFolderOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsProjectsFolderOpen(false);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [isProjectsFolderOpen]);
-
-  useEffect(() => {
-    const mql = window.matchMedia('(max-width: 767px)');
+    const mql = globalThis.matchMedia('(max-width: 767px)');
     const onMediaChange = () => setIsMobileLayout(mql.matches);
     onMediaChange();
     mql.addEventListener('change', onMediaChange);
@@ -211,8 +204,8 @@ export default function HomeScreenGrid({
         setIsProjectsFolderOpen(false);
       }
     };
-    window.addEventListener('pointerdown', onPointerDown, true);
-    return () => window.removeEventListener('pointerdown', onPointerDown, true);
+    globalThis.addEventListener('pointerdown', onPointerDown, true);
+    return () => globalThis.removeEventListener('pointerdown', onPointerDown, true);
   }, [isProjectsFolderOpen]);
 
   useLayoutEffect(() => {
@@ -312,19 +305,19 @@ export default function HomeScreenGrid({
       if (e.pointerId !== pid) return;
       skipClickRef.current = true;
       endDrag(e.clientX, e.clientY, id);
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
+      globalThis.removeEventListener('pointermove', onMove);
+      globalThis.removeEventListener('pointerup', onUp);
+      globalThis.removeEventListener('pointercancel', onUp);
     };
 
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onUp);
+    globalThis.addEventListener('pointermove', onMove);
+    globalThis.addEventListener('pointerup', onUp);
+    globalThis.addEventListener('pointercancel', onUp);
 
     return () => {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onUp);
+      globalThis.removeEventListener('pointermove', onMove);
+      globalThis.removeEventListener('pointerup', onUp);
+      globalThis.removeEventListener('pointercancel', onUp);
     };
   }, [draggingId, endDrag, resolveDropCell]);
 
@@ -336,9 +329,9 @@ export default function HomeScreenGrid({
       let activePointerId: number | null = null;
 
       const cleanupWindow = (move: (e: PointerEvent) => void, up: (e: PointerEvent) => void) => {
-        window.removeEventListener('pointermove', move);
-        window.removeEventListener('pointerup', up);
-        window.removeEventListener('pointercancel', up);
+        globalThis.removeEventListener('pointermove', move);
+        globalThis.removeEventListener('pointerup', up);
+        globalThis.removeEventListener('pointercancel', up);
       };
 
       const onPointerDown = (e: React.PointerEvent<HTMLAnchorElement>) => {
@@ -365,9 +358,9 @@ export default function HomeScreenGrid({
           cleanupWindow(onEarlyMove, onEarlyUp);
         };
 
-        window.addEventListener('pointermove', onEarlyMove);
-        window.addEventListener('pointerup', onEarlyUp);
-        window.addEventListener('pointercancel', onEarlyUp);
+        globalThis.addEventListener('pointermove', onEarlyMove);
+        globalThis.addEventListener('pointerup', onEarlyUp);
+        globalThis.addEventListener('pointercancel', onEarlyUp);
 
         timer = setTimeout(() => {
           timer = null;
@@ -515,28 +508,26 @@ export default function HomeScreenGrid({
       </div>
       </div>
 
-      <div
-        className={`absolute z-[120] flex items-center justify-center backdrop-blur-[24px] transition-opacity duration-220 -left-4 -right-4 -bottom-[8.5rem] -top-4 md:-top-14 max-md:-left-2.5 max-md:-right-2.5 max-md:-top-3 max-md:-bottom-24 ${
-          isProjectsFolderOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
-        }`}
-        onClick={() => setIsProjectsFolderOpen(false)}
+      <dialog
+        open={isProjectsFolderOpen ? true : undefined}
+        onCancel={(e) => {
+          e.preventDefault();
+          setIsProjectsFolderOpen(false);
+        }}
+        className="absolute z-[120] m-0 flex max-h-none w-full max-w-none items-center justify-center border-0 bg-transparent p-0 backdrop-blur-[24px] transition-opacity duration-220 -left-4 -right-4 -bottom-[8.5rem] -top-4 md:-top-14 max-md:-left-2.5 max-md:-right-2.5 max-md:-top-3 max-md:-bottom-24 [&::backdrop]:bg-transparent"
+        aria-labelledby="projects-folder-title"
+        aria-modal="true"
       >
         <div
           className={`flex w-full max-w-[320px] flex-col items-center transition-transform duration-220 ${
             isProjectsFolderOpen ? 'translate-y-0 scale-100' : 'translate-y-2 scale-95'
           }`}
           ref={projectsPanelRef}
-          onClick={(e) => e.stopPropagation()}
         >
           <p id="projects-folder-title" className="mb-5 w-full text-left text-[30px] font-bold text-neutral-800">
             Proyectos
           </p>
-          <div
-            className="dock-glass h-[min(320px,calc(100vw-2rem))] w-[min(320px,calc(100vw-2rem))] rounded-[30px] border border-white/40 shadow-[0_18px_42px_rgba(0,0,0,0.28)] backdrop-blur-[24px]"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="projects-folder-title"
-          >
+          <div className="dock-glass h-[min(320px,calc(100vw-2rem))] w-[min(320px,calc(100vw-2rem))] rounded-[30px] border border-white/40 shadow-[0_18px_42px_rgba(0,0,0,0.28)] backdrop-blur-[24px]">
             <div className="grid h-full w-full place-items-center px-4 pb-3 pt-1">
               <div className="grid h-[292px] w-[256px] grid-cols-3 grid-rows-3 place-items-center gap-x-3 gap-y-2">
                 <button
@@ -585,7 +576,7 @@ export default function HomeScreenGrid({
             </div>
           </div>
         </div>
-      </div>
+      </dialog>
 
       {draggingId && previewAnchor ? (
         <div

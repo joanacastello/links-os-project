@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-interface PhoneFrameProps {
+type PhoneFrameProps = Readonly<{
   children: React.ReactNode;
   /** Fondo del panel interior (pantalla con esquinas redondeadas). Por defecto tono crema del home. */
   innerScreenClassName?: string;
@@ -8,7 +8,7 @@ interface PhoneFrameProps {
   statusBarClassName?: string;
   /** Escala proporcional del contenido en mobile (sin encoger el marco/fondo). */
   enableMobileContentScale?: boolean;
-}
+}>;
 
 function getNowLabel() {
   return new Intl.DateTimeFormat('es-ES', {
@@ -32,12 +32,12 @@ export default function PhoneFrame({
   const [isMobileLayout, setIsMobileLayout] = useState(false);
 
   useEffect(() => {
-    const id = window.setInterval(() => setTimeLabel(getNowLabel()), 1000 * 30);
-    return () => window.clearInterval(id);
+    const id = globalThis.setInterval(() => setTimeLabel(getNowLabel()), 1000 * 30);
+    return () => globalThis.clearInterval(id);
   }, []);
 
   useEffect(() => {
-    const mql = window.matchMedia('(max-width: 767px)');
+    const mql = globalThis.matchMedia('(max-width: 767px)');
 
     const updateMobileScale = () => {
       const mobile = mql.matches;
@@ -47,18 +47,19 @@ export default function PhoneFrame({
         return;
       }
 
-      const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+      const viewportHeight =
+        globalThis.visualViewport?.height ?? globalThis.innerHeight;
       const availableHeight = Math.max(0, viewportHeight - MOBILE_FRAME_VERTICAL_MARGIN);
       const scale = Math.min(1, availableHeight / MOBILE_FRAME_BASE_HEIGHT);
       setMobileScale(scale);
     };
 
     updateMobileScale();
-    window.addEventListener('resize', updateMobileScale);
+    globalThis.addEventListener('resize', updateMobileScale);
     mql.addEventListener('change', updateMobileScale);
 
     return () => {
-      window.removeEventListener('resize', updateMobileScale);
+      globalThis.removeEventListener('resize', updateMobileScale);
       mql.removeEventListener('change', updateMobileScale);
     };
   }, []);

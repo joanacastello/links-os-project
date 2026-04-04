@@ -1,8 +1,8 @@
 import ProjectShowcaseScreen from './ProjectShowcaseScreen';
 
-interface OnAnemScreenProps {
+type OnAnemScreenProps = Readonly<{
   onBack: () => void;
-}
+}>;
 
 export default function OnAnemScreen({ onBack }: OnAnemScreenProps) {
   return (

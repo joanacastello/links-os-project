@@ -1,6 +1,6 @@
 import { ChevronLeft } from 'lucide-react';
 
-interface ScreenBackButtonProps {
+type ScreenBackButtonProps = Readonly<{
   onBack: () => void;
   /** Texto para lectores de pantalla. */
   label?: string;
@@ -8,7 +8,7 @@ interface ScreenBackButtonProps {
   iconClassName?: string;
   /** Clases extra del botón (p. ej. hover sobre fondo oscuro). */
   buttonClassName?: string;
-}
+}>;
 
 export default function ScreenBackButton({
   onBack,

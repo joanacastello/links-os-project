@@ -10,7 +10,9 @@ function dayLabel(n: number) {
   return `DÍA ${String(n).padStart(2, '0')}`;
 }
 
-function AdventCard({ item, className = '' }: { item: AdventDay; className?: string }) {
+type AdventCardProps = Readonly<{ item: AdventDay; className?: string }>;
+
+function AdventCard({ item, className = '' }: AdventCardProps) {
   return (
     <a
       href={item.href}
@@ -46,9 +48,9 @@ function AdventCard({ item, className = '' }: { item: AdventDay; className?: str
   );
 }
 
-interface AdventCalendarScreenProps {
+type AdventCalendarScreenProps = Readonly<{
   onBack: () => void;
-}
+}>;
 
 export default function AdventCalendarScreen({ onBack }: AdventCalendarScreenProps) {
   return (
@@ -74,9 +76,9 @@ export default function AdventCalendarScreen({ onBack }: AdventCalendarScreenPro
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-6 pt-2">
         <div className="mx-auto flex max-w-md flex-col gap-2.5">
-          {ADVENT_ROWS.map((row, rowIndex) => (
+          {ADVENT_ROWS.map((row) => (
             <div
-              key={rowIndex}
+              key={row.map((d) => d.day).join('-')}
               className={row.length === 2 ? 'grid grid-cols-2 gap-2.5' : 'grid grid-cols-1 gap-2.5'}
             >
               {row.map((item) => (

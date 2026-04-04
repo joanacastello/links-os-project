@@ -36,9 +36,9 @@ function StarField() {
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
       aria-hidden
     >
-      {stars.map((s, i) => (
+      {stars.map((s) => (
         <span
-          key={i}
+          key={`${s.left}-${s.top}-${s.size}-${s.opacity}`}
           className="absolute rounded-full bg-white"
           style={{
             left: s.left,
@@ -53,6 +53,15 @@ function StarField() {
   );
 }
 
+type IosEmailFieldProps = Readonly<{
+  value: string;
+  onChange: (v: string) => void;
+  onWebsiteChange: (v: string) => void;
+  onSubmit: () => void;
+  disabled: boolean;
+  placeholder: string;
+}>;
+
 function IosEmailField({
   value,
   onChange,
@@ -60,14 +69,7 @@ function IosEmailField({
   onSubmit,
   disabled,
   placeholder,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  onWebsiteChange: (v: string) => void;
-  onSubmit: () => void;
-  disabled: boolean;
-  placeholder: string;
-}) {
+}: IosEmailFieldProps) {
   const submit = useCallback(() => {
     if (!disabled) onSubmit();
   }, [disabled, onSubmit]);
@@ -131,9 +133,9 @@ function IosEmailField({
   );
 }
 
-interface VibeCodingScreenProps {
+type VibeCodingScreenProps = Readonly<{
   onBack: () => void;
-}
+}>;
 
 export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
   const [email, setEmail] = useState('');
@@ -288,17 +290,20 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
         </div>
       ) : null}
 
-      {successOpen ? (
+      <dialog
+        open={successOpen ? true : undefined}
+        onCancel={(e) => {
+          e.preventDefault();
+          setSuccessOpen(false);
+        }}
+        className="absolute inset-0 z-40 m-0 flex max-h-none w-full max-w-none items-end justify-center border-0 bg-black/45 p-4 pb-8 backdrop-blur-[1px] sm:items-center sm:pb-4 [&::backdrop]:bg-transparent"
+        aria-labelledby="vibe-success-title"
+        aria-modal="true"
+      >
         <div
-          className="absolute inset-0 z-40 flex items-end justify-center bg-black/45 p-4 pb-8 backdrop-blur-[1px] sm:items-center sm:pb-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="vibe-success-title"
+          className="w-full max-w-sm rounded-[1.5rem] border border-white/10 px-8 py-8 text-center text-white shadow-xl"
+          style={{ backgroundColor: DIALOG_MODAL_BG }}
         >
-          <div
-            className="w-full max-w-sm rounded-[1.5rem] border border-white/10 px-8 py-8 text-center text-white shadow-xl"
-            style={{ backgroundColor: DIALOG_MODAL_BG }}
-          >
             <img
               src="/sa/lock.png"
               alt=""
@@ -329,7 +334,7 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
                   rel="noopener noreferrer"
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-white bg-transparent py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-white/5 active:bg-white/10"
                 >
-                  Ver la Comunidad
+                  Ver la Comunidad{' '}
                   <span aria-hidden className="text-lg leading-none">
                     →
                   </span>
@@ -351,8 +356,7 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
+      </dialog>
     </div>
   );
 }
