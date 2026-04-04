@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import AdventCalendarScreen from './components/advent/AdventCalendarScreen';
 import PhoneFrame from './components/PhoneFrame';
 import HomeScreenGrid from './components/HomeScreenGrid';
@@ -125,6 +126,7 @@ function App() {
         </div>
         {isHome ? <LinksDock /> : null}
       </PhoneFrame>
+      <Analytics />
     </main>
   );
 }
