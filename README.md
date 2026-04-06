@@ -1,73 +1,130 @@
-# React + TypeScript + Vite
+# Links OS Project
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Una experiencia web interactiva con estética de pantalla de inicio estilo smartphone para centralizar enlaces, proyectos y contenido personal en un solo lugar.
 
-Currently, two official plugins are available:
+## Qué hace este proyecto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+`links-os-project` es una landing interactiva construida con React + TypeScript + Vite que simula un sistema operativo móvil:
 
-## React Compiler
+- Home con widgets y apps arrastrables (drag & drop).
+- Navegación entre pantallas internas (`home`, `advent`, `vibe`, `zero2hero`, `onanem`).
+- Dock social con accesos rápidos a perfiles públicos.
+- Suscripción a newsletter mediante endpoint seguro (`/api/subscribe`) con validaciones, límite de peticiones y protección básica anti abuso.
+- Integración con Sentry y Vercel Analytics.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Está pensado para creadoras/es y profesionales que quieren una “link in bio” más expresiva y con identidad visual propia.
 
-## Expanding the ESLint configuration
+## Stack técnico
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- `React 19`
+- `TypeScript`
+- `Vite 8`
+- `Tailwind CSS`
+- `Vitest` (tests)
+- `ESLint` (linting)
+- `Vercel Functions` (API serverless en producción)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Estructura rápida
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- `src/`: interfaz principal y componentes de la app.
+- `api/`: función serverless de newsletter (`subscribe.ts`).
+- `server/`: lógica de seguridad, validaciones y conexión con Beehiiv.
+- `docs/`: documentación operativa de seguridad.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Requisitos
+
+- Node.js 20+ (recomendado 22+)
+- npm / pnpm / yarn
+
+## Cómo ejecutarlo en local
+
+1. Clona el repositorio:
+
+```bash
+git clone <URL_DEL_REPO>
+cd links-os-project
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Instala dependencias:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+3. Crea tu archivo de entorno:
+
+```bash
+cp .env.example .env
+```
+
+4. Completa las variables necesarias en `.env`:
+
+- `BEEHIIV_API_BASE`
+- `BEEHIIV_API_KEY`
+- `BEEHIIV_PUBLICATION_ID`
+- `BEEHIIV_SUBSCRIBE_TAG`
+- `BEEHIIV_UTM_SOURCE`
+- `BEEHIIV_UTM_MEDIUM`
+- `VITE_SA_COMMUNITY_URL`
+- `VITE_SENTRY_DSN` (opcional)
+
+5. Inicia el entorno de desarrollo:
+
+```bash
+npm run dev
+```
+
+## Scripts útiles
+
+- `npm run dev`: arranca Vite en desarrollo.
+- `npm run build`: compila TypeScript y genera build de producción.
+- `npm run preview`: sirve la build localmente.
+- `npm run lint`: ejecuta ESLint.
+- `npm run test`: ejecuta tests con Vitest.
+
+## Despliegue
+
+El proyecto está preparado para desplegarse en Vercel:
+
+- Frontend estático con Vite.
+- Endpoint `/api/subscribe` como función serverless.
+- Variables sensibles definidas en entorno de Vercel (nunca en cliente).
+
+Flujo recomendado:
+
+1. Subir repositorio a GitHub.
+2. Importar proyecto en Vercel.
+3. Configurar variables de entorno.
+4. Desplegar.
+
+## Personalización para otras personas
+
+Si quieres reutilizar este proyecto para tu marca personal:
+
+- Cambia enlaces del home en `src/components/HomeScreenGrid.tsx`.
+- Actualiza enlaces del dock en `src/config/socialLinks.ts`.
+- Sustituye iconos e imágenes en `public/`.
+- Ajusta textos, nombres y labels en componentes (`LinkWidget`, pantallas de proyectos, etc.).
+- Personaliza estilos y paleta en clases Tailwind.
+
+## Seguridad y privacidad
+
+Se incluyen guías prácticas para operación y cumplimiento:
+
+- `docs/security-checklist.md`
+- `docs/security-runbook.md`
+
+Estas guías cubren validaciones, rate limiting, cabeceras de seguridad, respuesta ante incidentes y buenas prácticas RGPD.
+
+## Contribuciones
+
+Si detectas una mejora o bug:
+
+1. Crea una rama.
+2. Realiza cambios con pruebas/lint.
+3. Abre un Pull Request describiendo el contexto.
+
+## Licencia
+
+Define aquí la licencia que quieras aplicar (`MIT`, `Apache-2.0`, etc.).
+Si todavía no has decidido una, añade un archivo `LICENSE` antes de aceptar contribuciones externas.
