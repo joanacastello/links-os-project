@@ -115,16 +115,3 @@ Se incluyen guías prácticas para operación y cumplimiento:
 - `docs/security-runbook.md`
 
 Estas guías cubren validaciones, rate limiting, cabeceras de seguridad, respuesta ante incidentes y buenas prácticas RGPD.
-
-## Contribuciones
-
-Si detectas una mejora o bug:
-
-1. Crea una rama.
-2. Realiza cambios con pruebas/lint.
-3. Abre un Pull Request describiendo el contexto.
-
-## Licencia
-
-Define aquí la licencia que quieras aplicar (`MIT`, `Apache-2.0`, etc.).
-Si todavía no has decidido una, añade un archivo `LICENSE` antes de aceptar contribuciones externas.
