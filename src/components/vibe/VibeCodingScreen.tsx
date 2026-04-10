@@ -302,13 +302,14 @@ export default function VibeCodingScreen({ onBack }: VibeCodingScreenProps) {
               Plazas cerradas por ahora
             </h2>
             <p className="mt-4 text-base leading-snug text-neutral-200">
-              Serás la primera en saber cuando abramos.
+              Cuando abramos plazas, tu seras de las primeras personas en saberlo.
+              <br />
+              <span className="font-bold" style={{ color: ACCENT_ORANGE }}>
+                Solo tienes que confirmar tu correo. Si no lo haces, el aviso no llega.
+              </span>
             </p>
-            <p className="mt-4 text-[15px] leading-relaxed text-neutral-300">
-              <span className="font-semibold" style={{ color: ACCENT_ORANGE }}>
-                Revisa tu correo
-              </span>{' '}
-              y acepta la confirmación — puede estar en spam o promociones.
+            <p className="mt-3 text-[13px] leading-relaxed text-neutral-400">
+              Revisa en spam o promociones.
             </p>
 
             <div className="mt-8 flex flex-col gap-3">
