@@ -39,6 +39,7 @@ type BeehiivRuntimeConfig = {
 };
 
 const DEFAULT_BEEHIIV_API_BASE = 'https://api.beehiiv.com/v2';
+const BEEHIIV_RETRY_DELAYS_MS = [400, 1200] as const;
 
 function normalizeApiBase(raw: string | undefined): string {
   const value = raw?.trim() || DEFAULT_BEEHIIV_API_BASE;
@@ -71,6 +72,18 @@ function parseResponseJson(text: string): ParsedResponseJson {
       statusCode: 502,
     };
   }
+}
+
+function isRetryableStatus(status: number): boolean {
+  return status >= 500 && status <= 599;
+}
+
+async function wait(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function normalizeContentType(res: Response): string {
+  return (res.headers.get('content-type') ?? 'unknown').split(';', 1)[0].trim() || 'unknown';
 }
 
 function resolveBeehiivRuntimeConfig(env: Env): BeehiivRuntimeConfig | BeehiivFailure {
@@ -111,47 +124,83 @@ async function createBeehiivSubscription(
   cfg: BeehiivRuntimeConfig,
 ): Promise<{ subId: string } | BeehiivFailure> {
   const headers = beehiivHeaders(cfg.apiKey);
-  let createRes: Response;
-  try {
-    createRes = await fetch(`${cfg.apiBase}/publications/${cfg.publicationId}/subscriptions`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        email,
-        reactivate_existing: false,
-        send_welcome_email: true,
-        double_opt_override: 'not_set',
-        utm_source: cfg.utmSource,
-        utm_medium: cfg.utmMedium,
-      }),
-    });
-  } catch {
+  const requestUrl = `${cfg.apiBase}/publications/${cfg.publicationId}/subscriptions`;
+  const requestBody = JSON.stringify({
+    email,
+    reactivate_existing: false,
+    send_welcome_email: true,
+    double_opt_override: 'not_set',
+    utm_source: cfg.utmSource,
+    utm_medium: cfg.utmMedium,
+  });
+
+  let createRes: Response | undefined;
+  let lastFailureWasNetwork = false;
+  for (let attempt = 0; attempt <= BEEHIIV_RETRY_DELAYS_MS.length; attempt++) {
+    try {
+      createRes = await fetch(requestUrl, {
+        method: 'POST',
+        headers,
+        body: requestBody,
+      });
+      lastFailureWasNetwork = false;
+    } catch {
+      lastFailureWasNetwork = true;
+      if (attempt < BEEHIIV_RETRY_DELAYS_MS.length) {
+        await wait(BEEHIIV_RETRY_DELAYS_MS[attempt]);
+        continue;
+      }
+      break;
+    }
+
+    if (isRetryableStatus(createRes.status) && attempt < BEEHIIV_RETRY_DELAYS_MS.length) {
+      await wait(BEEHIIV_RETRY_DELAYS_MS[attempt]);
+      continue;
+    }
+
+    break;
+  }
+
+  if (!createRes && lastFailureWasNetwork) {
     return {
       ok: false,
       publicError: 'No se pudo completar la suscripción. Inténtalo más tarde.',
-      internalReason: 'Beehiiv create subscription network failure',
+      internalReason: 'Beehiiv create subscription network failure after retries',
       statusCode: 502,
     };
   }
 
-  const parsed = parseResponseJson(await createRes.text());
-  if (isParsedJsonFailure(parsed)) {
+  if (!createRes) {
     return {
       ok: false,
-      publicError: parsed.publicError,
-      internalReason: 'Beehiiv create subscription returned invalid JSON',
-      statusCode: parsed.statusCode,
+      publicError: 'No se pudo completar la suscripción. Inténtalo más tarde.',
+      internalReason: 'Beehiiv create subscription unavailable',
+      statusCode: 502,
     };
   }
 
+  const createBodyText = await createRes.text();
+
   if (!createRes.ok) {
-    const providerMsg =
-      extractBeehiivError(parsed.json) ?? 'No se pudo completar la suscripción.';
+    const parsedError = parseResponseJson(createBodyText);
+    const providerMsg = parsedError.ok
+      ? extractBeehiivError(parsedError.json) ?? 'No se pudo completar la suscripción.'
+      : `non-json response (contentType=${normalizeContentType(createRes)}, bodyLength=${createBodyText.length})`;
     return {
       ok: false,
       publicError: 'No se pudo completar la suscripción. Inténtalo de nuevo.',
       internalReason: `Beehiiv create subscription failed. HTTP=${createRes.status}, provider=${providerMsg}`,
       statusCode: createRes.status >= 400 && createRes.status < 600 ? createRes.status : 500,
+    };
+  }
+
+  const parsed = parseResponseJson(createBodyText);
+  if (isParsedJsonFailure(parsed)) {
+    return {
+      ok: false,
+      publicError: parsed.publicError,
+      internalReason: `Beehiiv create subscription returned invalid JSON. HTTP=${createRes.status}, contentType=${normalizeContentType(createRes)}, bodyLength=${createBodyText.length}`,
+      statusCode: 502,
     };
   }
 
